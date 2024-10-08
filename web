@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>GoodStream</title>
     <style>
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start; /* 改為從頂部開始排列 */
+            align-items: center;
+            margin-left: 420px;
+            margin-right: 420px;
+            margin-top: -400px;
+            padding-top: 0px; /* 添加頂部內邊距 */
+        }
+
+        .video-container {
+            width: 720px; /* 16:9 寬高比的寬度 */
+            height: 405px; /* 16:9 寬高比的高度 */
+            background-color: #000; /* 視頻背景色 */
+            margin-bottom: 15px; /* 在視頻和按鈕之間添加間距 */
+        }
+
+    </style>
+    <style>
         body {
             background-color: #f8eeee;
             margin: 0;
@@ -31,10 +53,10 @@
         }
 
         .sidebar-item {
-            padding: 10px;
-            margin-bottom: 10px;
+            padding: 20px;
+            margin-bottom: 1px;
             background-color: #f0f0f0;
-            border-radius: 5px;
+            border-radius: 0;
             cursor: pointer;
             transition: background-color 0.3s;
         }
@@ -54,6 +76,7 @@
 
         .button-container {
             display: flex;
+            margin-top: 5px;
         }
 
         button {
@@ -131,16 +154,37 @@
         <div class="sidebar-item">項目 3</div>
         <div class="sidebar-item">項目 4</div>
         <div class="sidebar-item">項目 5</div>
+        <div class="sidebar-item">項目 6</div>
+        <div class="sidebar-item">項目 7</div>
+        <div class="sidebar-item">項目 8</div>
+        <div class="sidebar-item">項目 9</div>
+        <div class="sidebar-item">項目 10</div>
+        <div class="sidebar-item">項目 11</div>
+        <div class="sidebar-item">項目 12</div>
+        <div class="sidebar-item">項目 13</div>
+        <div class="sidebar-item">項目 14</div>
+        <div class="sidebar-item">項目 15</div>
     </div>
 
     <div class="main-content">
+        <div class="video-container">
+            <!-- Twitch 直播播放器 -->
+            <iframe
+                src="https://player.twitch.tv/?channel=twitchpresents&parent=yourwebsite.com"
+                frameborder="0"
+                allowfullscreen="true"
+                scrolling="no"
+                height="100%"
+                width="100%">
+            </iframe>
+        </div>
         <div class="button-container">
             <button class="subscribe-btn" type="button">訂閱</button>
+            <button class="share-btn" type="button">分享</button>
+            <button class="follow-btn" type="button">追隨</button>
             <button class="ring-btn" type="button" onclick="alert('鈴鐺按鈕被點擊！')">
                 <img src="https://img.icons8.com/ios-filled/50/ffffff/bell.png" alt="鈴鐺" class="bell-icon">
             </button>
-            <button class="share-btn" type="button">分享</button>
-            <button class="follow-btn" type="button">追隨</button>
         </div>
     </div>
 
