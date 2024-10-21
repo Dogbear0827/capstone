@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登錄頁面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f8eeee; /* 輕柔背景色 */
+        }
+
+        .login-container {
+            width: 300px;
+            padding: 20px;
+            background-color: #d1a8a8; /* 登錄框背景色 */
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            color: #2e2e2e; /* 標題文字顏色 */
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc; /* 較淺的邊框顏色 */
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .login-container input[type="submit"] {
+            width: 100%;
+            padding: 10px;
+            background-color: #6fe4f8; /* 按鈕背景色 */
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .login-container input[type="submit"]:hover {
+            background-color: #5bc0de; /* 懸停按鈕顏色 */
+        }
+
+        .login-container .links {
+            margin-top: 15px;
+        }
+
+        .login-container a {
+            color: #2e2e2e; /* 連結顏色 */
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .login-container a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>登錄</h2>
+        <form action="../login.html" method="post">
+            <input type="text" name="username" placeholder="使用者名稱" required>
+            <input type="password" name="password" placeholder="密碼" required>
+            <input type="submit" value="登錄">
+        </form>
+        <div class="links">
+            <a href="../register.html" target="_self">註冊</a> | 
+            <a href="/forgot-password">忘記密碼？</a>
+        </div>
+    </div>
+</body>
+</html>
