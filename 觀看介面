@@ -12,15 +12,41 @@
             height: 100vh;
             font-family: Arial, sans-serif;
         }
+        /* Sidebar styles */
+        .sidebar {
+            width: 200px;
+            background-color: #d1a8a8; /* Slightly darker for sidebar */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #c2c2c2;
+        }
+
+        .followed-streamer {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #c2c2c2; /* Background for streamer items */
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+
+        .followed-streamer:hover {
+            background-color: #b0b0b0; /* Darker on hover */
+        }
+
+        /* Main content styles */
         .main-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            margin-right: 26vw;
+            align-items: center; /* 將內容置中 */
             padding: 1vh;
             box-sizing: border-box;
+            margin-left: 20px; /* Align with sidebar */
+            margin-right: 25vw; /* 留出聊天室的空間 */
         }
         .video-container {
             width: 100%;
@@ -112,7 +138,66 @@
             transform: scale(0.95); /* 按下去的效果 */
         }
 
-        /* 媒體查詢以調整視窗大小時的樣式 */
+        /* Modal樣式 */
+        .modal {
+            display: none; /* 預設隱藏 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .modal button {
+            margin: 5px;
+        }
+        .confirm-btn {
+            background-color: #007bff; /* 確定按鈕藍色 */
+        }
+        .cancel-btn {
+            background-color: #4e5452; /* 深一點的灰色 */
+        }
+
+        /* 送禮視窗 */
+        .gift-modal {
+            display: none; /* 預設隱藏 */
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .gift-modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .gift-item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .gift-image {
+            width: 60px; /* 調整圖形大小 */
+            height: 60px;
+        }
+        .gift-price {
+            margin-top: 5px;
+        }
+
         @media (max-width: 1200px) {
             .main-content {
                 margin-right: 0; /* 在較小螢幕上去除右邊距 */
@@ -123,18 +208,32 @@
             .chat-box {
                 width: 30vw; /* 聊天室寬度調整 */
             }
+            .sidebar {
+                display: none; /* Hide sidebar on small screens */
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Sidebar with followed streamers -->
+    <div class="sidebar">
+        <h2>追隨的實況主</h2>
+        <div class="followed-streamer" tabindex="0">實況主 1</div>
+        <div class="followed-streamer" tabindex="0">實況主 2</div>
+        <div class="followed-streamer" tabindex="0">實況主 3</div>
+        <div class="followed-streamer" tabindex="0">實況主 4</div>
+    </div>
+
     <div class="main-content">
         <div class="video-container">
             <video id="myVideo" src="https://www.w3schools.com/html/mov_bbb.mp4" controls></video>
         </div>
         <div class="button-container">
-            <button class="subscribe-btn">訂閱</button>
-            <button class="share-btn">送禮</button>
-            <button class="follow-btn">追隨</button>
+            <button class="subscribe-btn" onclick="showModal()">訂閱</button>
+            <button class="share-btn" onclick="showGiftModal()">送禮</button>
+            <a href="favorite_streamers.html" style="text-decoration: none;">
+                <button class="follow-btn">追隨</button>
+            </a>
             <button class="ring-btn" onclick="alert('鈴鐺按鈕被點擊！')">
                 <img src="https://img.icons8.com/ios-filled/50/ffffff/bell.png" alt="鈴鐺" class="bell-icon">
             </button>
@@ -146,7 +245,81 @@
         <input type="text" id="chat-input" placeholder="輸入消息...">
         <button id="send-button">發送</button>
     </div>
+
+    <!-- 訂閱確認視窗 -->
+    <div class="modal" id="subscriptionModal">
+        <div class="modal-content">
+            <h2>您確定要訂閱嗎?</h2>
+            <p>現在一個月訂閱金額 7777 美元</p>
+            <textarea id="userMessage" placeholder="給實況主的消息..."></textarea>
+            <br>
+            <button class="confirm-btn" onclick="confirmSubscription()">確定</button>
+            <button class="cancel-btn" onclick="closeModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 送禮視窗 -->
+    <div class="gift-modal" id="giftModal">
+        <div class="gift-modal-content">
+            <h2>選擇要贈送的禮物</h2>
+            <div class="gift-item" onclick="sendGift('火箭', 100)">
+                <img src="https://img.icons8.com/ios-filled/100/007bff/rocket.png" class="gift-image" alt="火箭">
+                <div class="gift-price">100$</div>
+            </div>
+            <div class="gift-item" onclick="sendGift('蛋糕', 80)">
+                <img src="https://img.icons8.com/ios-filled/100/007bff/cake.png" class="gift-image" alt="蛋糕">
+                <div class="gift-price">80$</div>
+            </div>
+            <div class="gift-item" onclick="sendGift('禮物', 50)">
+                <img src="https://img.icons8.com/ios-filled/100/007bff/gift.png" class="gift-image" alt="禮物">
+                <div class="gift-price">50$</div>
+            </div>
+            <div class="gift-item" onclick="sendGift('花', 30)">
+                <img src="https://img.icons8.com/ios-filled/100/007bff/flower.png" class="gift-image" alt="花">
+                <div class="gift-price">30$</div>
+            </div>
+            <button class="cancel-btn" onclick="closeGiftModal()">關閉</button>
+        </div>
+    </div>
+
     <script>
+        // 顯示訂閱確認視窗
+        function showModal() {
+            document.getElementById('subscriptionModal').style.display = 'flex';
+        }
+
+        // 確認訂閱
+        function confirmSubscription() {
+            const message = document.getElementById('userMessage').value;
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p>使用者名字: 感謝您的訂閱！消息: ${message}</p>`;
+            closeModal();
+        }
+
+        // 關閉視窗
+        function closeModal() {
+            document.getElementById('subscriptionModal').style.display = 'none';
+            document.getElementById('userMessage').value = ''; // 清空文字框
+        }
+
+        // 顯示送禮視窗
+        function showGiftModal() {
+            document.getElementById('giftModal').style.display = 'flex';
+        }
+
+        // 送禮
+        function sendGift(gift, amount) {
+            const messagesDiv = document.getElementById('messages');
+            messagesDiv.innerHTML += `<p>使用者名字: 贈送了 ${gift} - ${amount}$</p>`;
+            closeGiftModal();
+        }
+
+        // 關閉送禮視窗
+        function closeGiftModal() {
+            document.getElementById('giftModal').style.display = 'none';
+        }
+
+        // 發送聊天室消息
         document.getElementById('send-button').addEventListener('click', function() {
             const input = document.getElementById('chat-input');
             const message = input.value;
@@ -158,6 +331,7 @@
             }
         });
 
+        // 支援Enter鍵發送消息
         document.getElementById('chat-input').addEventListener('keypress', function(event) {
             if (event.key === 'Enter') {
                 document.getElementById('send-button').click();
