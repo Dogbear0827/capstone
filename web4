@@ -66,9 +66,48 @@
             font-size: 14px;
             color: #585757;
         }
+
+        /* Header for user info and logout button */
+        .header {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #2e2e2e;
+            color: #fff;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom-left-radius: 10px;
+        }
+
+        .user-info {
+            margin-right: 20px;
+            font-size: 14px;
+        }
+
+        .logout-button {
+            background-color: #ff5e5e;
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background-color: #ff2e2e;
+        }
     </style>
 </head>
 <body>
+
+<!-- Header with user info and logout button -->
+<div class="header">
+    <div class="user-info">Account ID: <strong>12345</strong></div>
+    <button class="logout-button">Logout</button>
+</div>
 
 <h1>What video do you want?</h1>
 
@@ -112,3 +151,4 @@
 
 </body>
 </html>
+
