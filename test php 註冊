@@ -1,0 +1,44 @@
+<?php
+// 連接到資料庫
+$servername = "localhost";
+$username = "root"; // 根據你的設定更改這裡
+$password = "";     // 根據你的設定更改這裡
+$dbname = "user_accounts";
+
+// 創建連接
+$conn = new mysqli($servername, $username, $password, $dbname);
+
+// 檢查連接
+if ($conn->connect_error) {
+    die("連接失敗: " . $conn->connect_error);
+}
+
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $user_username = $_POST['username'];
+    $user_email = $_POST['email'];
+    $user_password = $_POST['userpassword'];
+
+    // 檢查是否已有相同使用者名稱或電子郵件
+    $check_user_sql = "SELECT * FROM users WHERE username='$user_username' OR email='$user_email'";
+    $result = $conn->query($check_user_sql);
+
+    if ($result->num_rows > 0) {
+        // 使用者名稱或電子郵件已存在
+        echo "使用者名稱或電子郵件已被註冊";
+    } else {
+        // 將密碼加密後存入資料庫
+        $hashed_password = password_hash($user_password, PASSWORD_DEFAULT);
+
+        // 插入新使用者資料
+        $insert_sql = "INSERT INTO users (username, email, password) VALUES ('$user_username', '$user_email', '$hashed_password')";
+
+        if ($conn->query($insert_sql) === TRUE) {
+            echo "註冊成功！";
+        } else {
+            echo "註冊失敗: " . $conn->error;
+        }
+    }
+}
+
+$conn->close();
+?>
