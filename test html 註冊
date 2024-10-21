@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>註冊頁面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f2f2f2;
+        }
+
+        .register-container {
+            width: 350px;
+            padding: 30px;
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .register-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .register-container input[type="text"],
+        .register-container input[type="email"],
+        .register-container input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .register-container input[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .register-container input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        .register-container .back-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #ccc;
+            border: none;
+            border-radius: 4px;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .register-container .back-button:hover {
+            background-color: #bbb;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <h2>註冊</h2>
+        <form id="register-form" action="register.php" method="post" onsubmit="return validateForm()">
+            <input type="text" id="username" name="username" placeholder="使用者名稱" required>
+            <input type="email" id="email" name="email" placeholder="電子郵件" required>
+            <input type="password" id="userpassword" name="userpassword" placeholder="密碼 (至少8位數)" required>
+            <input type="password" id="confirm-password" name="confirm-password" placeholder="確認密碼" required>
+            <input type="submit" value="註冊">
+            <button type="button" class="back-button" onclick="window.location.href='web/first.html'">返回</button>
+            <p id="error-message" class="error-message"></p>
+        </form>
+    </div>
+
+    <script>
+        function validateForm() {
+            var password = document.getElementById('userpassword').value;
+            var confirmPassword = document.getElementById('confirm-password').value;
+            var errorMessage = document.getElementById('error-message');
+
+            // 驗證密碼長度是否足夠
+            if (password.length < 8) {
+                errorMessage.textContent = '密碼必須至少8個字符。';
+                return false;
+            }
+
+            // 驗證密碼是否匹配
+            if (password !== confirmPassword) {
+                errorMessage.textContent = '密碼和確認密碼不匹配。';
+                return false;
+            }
+
+            errorMessage.textContent = '';
+            return true;
+        }
+    </script>
+</body>
+</html>
