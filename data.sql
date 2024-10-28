@@ -1,8 +1,6 @@
-CREATE DATABASE your_database;
-GO
+CREATE DATABASE mysql;
 
-USE your_database;
-GO
+USE mysql;
 
 CREATE TABLE users (
     id INT PRIMARY KEY IDENTITY(1,1),
@@ -13,10 +11,7 @@ CREATE TABLE users (
     updated_at DATETIME DEFAULT GETDATE(),
     is_active BIT DEFAULT 1
 );
-GO
 
 CREATE INDEX idx_users_email ON users (email);
-GO
 
 CREATE INDEX idx_users_username ON users (username);
-GO
