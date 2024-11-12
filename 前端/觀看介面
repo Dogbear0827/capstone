@@ -46,13 +46,13 @@
         .video-container {
             width: 100%;
             max-width: 960px;
-            height: auto;
+            height: 540px; /* 設置固定高度 */
             position: relative;
         }
-        video {
+        iframe {
             width: 100%;
-            height: auto;
-            border: 2px solid #333;
+            height: 100%;
+            border: none;
             border-radius: 8px;
         }
         .button-container {
@@ -226,28 +226,20 @@
     <!-- Sidebar with followed streamers -->
     <div class="sidebar">
         <h2>追隨的實況主</h2>
-        <a href="streamer1.html" style="text-decoration: none;">
-            <div class="followed-streamer" tabindex="0">實況主 1</div>
-        </a>
-        <a href="streamer2.html" style="text-decoration: none;">
-            <div class="followed-streamer" tabindex="0">實況主 2</div>
-        </a>
-        <a href="streamer3.html" style="text-decoration: none;">
-            <div class="followed-streamer" tabindex="0">實況主 3</div>
-        </a>
-        <a href="streamer4.html" style="text-decoration: none;">
-            <div class="followed-streamer" tabindex="0">實況主 4</div>
-        </a>
+        <ul id="followed-list">
+            <!-- This list will be dynamically updated with followed streamers -->
+        </ul>
     </div>
 
     <div class="main-content">
         <div class="video-container">
-            <video id="myVideo" src="https://www.w3schools.com/html/mov_bbb.mp4" controls></video>
+            <!-- 直播視窗（YouTube 直播嵌入） -->
+            <iframe src="https://www.youtube.com/embed/live_stream?channel=YOUR_CHANNEL_ID_HERE" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
         </div>
         <div class="button-container">
-            <button class="subscribe-btn" onclick="showModal()">訂閱</button>
+            <button class="subscribe-btn" onclick="showSubscriptionModal()">訂閱</button>
             <button class="share-btn" onclick="showGiftModal()">送禮</button>
-            <button class="follow-btn" onclick="showFollowModal()">追隨</button>
+            <button id="follow-btn" class="follow-btn" onclick="toggleFollow('實況主 1')">追隨</button>
             <button class="ring-btn" onclick="alert('鈴鐺按鈕被點擊！')">
                 <img src="https://img.icons8.com/ios-filled/50/ffffff/bell.png" alt="鈴鐺" class="bell-icon">
             </button>
@@ -258,35 +250,31 @@
         <h2>聊天室</h2>
         <div id="messages"></div>
         <div style="position: relative;">
-            <input type="text" id="chat-input" placeholder="輸入消息...">
+            <input type="text" id="chat-input" placeholder="輸入訊息..." />
             <button id="emoji-btn" onclick="toggleEmojiPicker()">
-                <img src="https://img.icons8.com/ios-filled/50/000000/smiling.png" alt="表情符號">
+                <img src="https://img.icons8.com/ios-filled/50/000000/like.png" alt="emoji" />
             </button>
             <div id="emoji-picker">
                 <span class="emoji" onclick="addEmoji('😊')">😊</span>
                 <span class="emoji" onclick="addEmoji('😂')">😂</span>
-                <span class="emoji" onclick="addEmoji('😍')">😍</span>
-                <span class="emoji" onclick="addEmoji('😭')">😭</span>
+                <span class="emoji" onclick="addEmoji('❤️')">❤️</span>
                 <span class="emoji" onclick="addEmoji('😎')">😎</span>
             </div>
+            <button id="send-button" onclick="sendMessage()">發送</button>
         </div>
-        <button id="send-button">發送</button>
     </div>
 
-    <!-- 訂閱確認視窗 -->
-    <div class="modal" id="subscriptionModal">
+    <!-- 訂閱 Modal -->
+    <div id="subscriptionModal" class="modal">
         <div class="modal-content">
-            <h2>您確定要訂閱嗎?</h2>
-            <p>現在一個月訂閱金額 7777 美元</p>
-            <textarea id="userMessage" placeholder="給實況主的消息..."></textarea>
-            <br>
+            <h2>確定要訂閱嗎？</h2>
             <button class="confirm-btn" onclick="confirmSubscription()">確定</button>
             <button class="cancel-btn" onclick="closeModal()">取消</button>
         </div>
     </div>
 
-    <!-- 送禮視窗 -->
-    <div class="gift-modal" id="giftModal">
+       <!-- 送禮視窗 -->
+       <div class="gift-modal" id="giftModal">
         <div class="gift-modal-content">
             <h2>選擇要贈送的禮物</h2>
             <div class="gift-item" onclick="sendGift('火箭', 100)">
@@ -308,30 +296,57 @@
             <button class="cancel-btn" onclick="closeGiftModal()">取消</button>
         </div>
     </div>
-
-    <!-- 追隨確認視窗 -->
-    <div class="follow-modal" id="followModal">
+    <!-- 追隨 Modal -->
+    <div id="followModal" class="follow-modal">
         <div class="follow-modal-content">
-            <h2>感謝您的追隨!</h2>
-            <button class="confirm-btn" onclick="closeFollowModal()">確定</button>
+            <h2>已追隨</h2>
+            <p>您已經追隨這個實況主。</p>
+            <button class="cancel-btn" onclick="closeFollowModal()">取消</button>
         </div>
     </div>
 
     <script>
         const userName = "User123";
+        const followedList = document.getElementById('followed-list');
+        let followedStreamers = [];  // 存儲已追隨的實況主
 
-        // 發送聊天室消息
-        document.getElementById('send-button').addEventListener('click', function() {
-            const input = document.getElementById('chat-input');
-            const message = input.value;
-            if (message) {
-                addMessageToChat(`${userName}: ${message}`);
-                input.value = '';
+        // 切換追隨狀態
+        function toggleFollow(streamerName) {
+            const followButton = document.getElementById('follow-btn');
+            if (followedStreamers.includes(streamerName)) {
+                // 取消追隨
+                followedStreamers = followedStreamers.filter(name => name !== streamerName);
+                followButton.textContent = '追隨';
+                removeFollowedStreamer(streamerName);
+            } else {
+                // 追隨
+                followedStreamers.push(streamerName);
+                followButton.textContent = '取消追隨';
+                addFollowedStreamer(streamerName);
             }
-        });
+        }
+
+        // 添加追隨的實況主到側邊欄
+        function addFollowedStreamer(streamerName) {
+            const listItem = document.createElement('li');
+            listItem.classList.add('followed-streamer');
+            listItem.textContent = `已追隨：${streamerName}`;
+            followedList.appendChild(listItem);
+        }
+
+        // 從側邊欄移除追隨的實況主
+        function removeFollowedStreamer(streamerName) {
+            const listItems = followedList.getElementsByTagName('li');
+            for (let item of listItems) {
+                if (item.textContent === `已追隨：${streamerName}`) {
+                    followedList.removeChild(item);
+                    break;
+                }
+            }
+        }
 
         // 顯示訂閱視窗
-        function showModal() {
+        function showSubscriptionModal() {
             document.getElementById('subscriptionModal').style.display = 'flex';
         }
 
@@ -346,8 +361,8 @@
             document.getElementById('subscriptionModal').style.display = 'none';
         }
 
-        // 顯示送禮視窗
-        function showGiftModal() {
+            // 顯示送禮視窗
+            function showGiftModal() {
             document.getElementById('giftModal').style.display = 'flex';
         }
 
@@ -362,29 +377,27 @@
             document.getElementById('giftModal').style.display = 'none';
         }
 
-        // 顯示追隨視窗
-        function showFollowModal() {
-            document.getElementById('followModal').style.display = 'flex';
-        }
 
-        // 關閉追隨視窗
+        // 顯示已追隨提示
         function closeFollowModal() {
             document.getElementById('followModal').style.display = 'none';
         }
 
-        // 將訊息新增至聊天室
+        // 發送訊息到聊天室
+        function sendMessage() {
+            const message = document.getElementById('chat-input').value;
+            if (message.trim()) {
+                addMessageToChat(`${userName}: ${message}`);
+                document.getElementById('chat-input').value = '';
+            }
+        }
+
+        // 添加訊息到聊天室
         function addMessageToChat(message) {
             const messagesDiv = document.getElementById('messages');
             messagesDiv.innerHTML += `<p>${message}</p>`;
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
-
-        // 支援Enter鍵發送消息
-        document.getElementById('chat-input').addEventListener('keypress', function(event) {
-            if (event.key === 'Enter') {
-                document.getElementById('send-button').click();
-            }
-        });
 
         // 顯示表情符號選擇器
         function toggleEmojiPicker() {
