@@ -267,7 +267,7 @@
     <!-- 訂閱 Modal -->
     <div id="subscriptionModal" class="modal">
         <div class="modal-content">
-            <h2>確定要訂閱嗎？</h2>
+            <h2>確定要花美金7777$訂閱嗎？</h2>
             <button class="confirm-btn" onclick="confirmSubscription()">確定</button>
             <button class="cancel-btn" onclick="closeModal()">取消</button>
         </div>
