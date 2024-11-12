@@ -1,1 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Video Selection Interface</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8eeee; /* Light background */
+            color: #2e2e2e; /* Darker text for contrast */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            min-height: 100vh;
+        }
 
+        /* Sidebar styles */
+        .sidebar {
+            width: 200px;
+            background-color: #d1a8a8; /* Slightly darker for sidebar */
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #c2c2c2;
+        }
+
+        .followed-streamer {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #c2c2c2; /* Background for streamer items */
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s;
+        }
+
+        .followed-streamer:hover {
+            background-color: #b0b0b0; /* Darker on hover */
+        }
+
+        h1 {
+            color: #2e2e2e;
+            font-size: 24px;
+            margin-bottom: 30px;
+            margin-left: 20px; /* Align with sidebar */
+        }
+
+        .content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            max-width: 1200px;
+        }
+
+        .video-card {
+            background-color: #afadad; /* Darker background for video cards */
+            border-radius: 10px;
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .video-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .video-thumbnail {
+            width: 100%;
+            height: 150px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        .video-info {
+            padding: 10px;
+        }
+
+        .video-title {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #292828;
+        }
+
+        .video-channel {
+            font-size: 14px;
+            color: #585757;
+        }
+
+        /* Header for user info and logout button */
+        .header {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: #d1a8a8; /* Match sidebar */
+            color: #2e2e2e;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            border-bottom-left-radius: 10px;
+        }
+
+        .user-info {
+            margin-right: 20px;
+            font-size: 14px;
+        }
+
+        .logout-button {
+            background-color: #ff5e5e;
+            border: none;
+            color: #fff;
+            padding: 8px 12px;
+            font-size: 14px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background-color: #ff2e2e;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 20px;
+            }
+
+            .video-title {
+                font-size: 14px;
+            }
+
+            .video-channel {
+                font-size: 12px;
+            }
+
+            .sidebar {
+                display: none; /* Hide sidebar on small screens */
+            }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Sidebar with followed streamers -->
+<div class="sidebar">
+    <h2>追隨的實況主</h2>
+    <div class="followed-streamer">實況主 1</div>
+    <div class="followed-streamer">實況主 2</div>
+    <div class="followed-streamer">實況主 3</div>
+    <div class="followed-streamer">實況主 4</div>
+</div>
+
+<!-- Main content -->
+<div class="content">
+    <!-- Header with user info and logout button -->
+    <header class="header">
+        <div class="user-info">Account ID: <strong>12345</strong></div>
+        <button class="logout-button" onclick="logout()">Logout</button>
+    </header>
+
+    <h1>What video do you want?</h1>
+
+    <div class="video-grid">
+        <!-- Video 1 -->
+        <div class="video-card">
+            <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+1');"></div>
+            <div class="video-info">
+                <div class="video-title">Video Title 1</div>
+                <div class="video-channel">Channel 1</div>
+            </div>
+        </div>
+
+        <!-- Video 2 -->
+        <div class="video-card">
+            <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+2');"></div>
+            <div class="video-info">
+                <div class="video-title">Video Title 2</div>
+                <div class="video-channel">Channel 2</div>
+            </div>
+        </div>
+
+        <!-- Video 3 -->
+        <div class="video-card">
+            <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+3');"></div>
+            <div class="video-info">
+                <div class="video-title">Video Title 3</div>
+                <div class="video-channel">Channel 3</div>
+            </div>
+        </div>
+
+        <!-- Video 4 -->
+        <div class="video-card">
+            <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+4');"></div>
+            <div class="video-info">
+                <div class="video-title">Video Title 4</div>
+                <div class="video-channel">Channel 4</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function logout() {
+        // Logout functionality goes here
+        alert('Logged out!');
+    }
+</script>
+
+</body>
+</html>
