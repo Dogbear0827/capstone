@@ -1,5 +1,5 @@
-CREATE DATABASE your_database;
-USE your_database;
+CREATE DATABASE ;
+USE ;
 
 
 CREATE TABLE users (
