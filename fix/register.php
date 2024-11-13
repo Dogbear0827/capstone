@@ -10,8 +10,8 @@ $password = "newpassword"; // 根據你的設定更改這裡
 $dbname = ""; // 你的資料庫名稱
 
 // 創建連接
-//記得安裝php-mysqli
-//sudo apt install php-mysqli
+// 記得安裝php-mysqli
+// sudo apt install php-mysqli
 $conn = new mysqli($servername, $username, $password, $dbname);
 
 // 檢查連接
