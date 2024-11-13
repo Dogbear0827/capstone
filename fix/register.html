@@ -95,28 +95,25 @@
     <script>
         // 驗證表單
         function validateForm() {
+			var errorMessage = document.getElementById('error-message');
+			// 驗證電子郵件格式
             var emailPattern = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
-            var password = document.getElementById('userpassword').value;
-            var confirmPassword = document.getElementById('confirm-password').value;
-            var errorMessage = document.getElementById('error-message');
-
-            // 驗證密碼長度是否足夠
-            if (password.length < 8) {
-                errorMessage.textContent = '密碼必須至少8個字符。';
-                return false;
-            }
-
-            // 驗證密碼是否匹配
-            if (password !== confirmPassword) {
-                errorMessage.textContent = '密碼和確認密碼不匹配。';
-                return false;
-            }
-            // 驗證電子郵件格式
             if (!emailPattern.test(email)) {
                 errorMessage.textContent = '請輸入有效的電子郵件地址。';
                 return false;
             }
-
+            // 驗證密碼長度是否足夠
+			var password = document.getElementById('userpassword').value;
+            if (password.length < 8) {
+                errorMessage.textContent = '密碼必須至少8個字符。';
+                return false;
+            }
+            // 驗證密碼是否匹配
+			var confirmPassword = document.getElementById('confirm-password').value;
+            if (password !== confirmPassword) {
+                errorMessage.textContent = '密碼和確認密碼不匹配。';
+                return false;
+            }
             errorMessage.textContent = '';
             return true;
         }
