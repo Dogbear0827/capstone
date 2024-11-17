@@ -139,7 +139,7 @@
                     var response = JSON.parse(xhr.responseText);
                     if (response.status === "success") {
                         alert("註冊成功！");
-                        // 可選的:註冊成功後導向登入頁面
+                        // Optional:註冊成功後導向登入頁面
                         window.location.href = "login.html";
                     } else {
                         document.getElementById('error-message').textContent = response.messages.join(", ");
