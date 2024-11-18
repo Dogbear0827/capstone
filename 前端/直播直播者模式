@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播主後台</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8eeee;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+        .video-container {
+            flex: 3;
+            background-color: #f8eeee;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 960px;
+            height: 540px;
+            background-color: #000;
+            border-radius: 8px;
+        }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #fff;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .screen-share-btn {
+            background-color: #f67280;
+        }
+        .camera-btn {
+            background-color: #f8a5c2;
+        }
+        .stop-btn {
+            background-color: #ea8685;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .chat-box {
+            flex: 1;
+            background-color: #fff;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow: hidden;
+        }
+        h2 {
+            text-align: center;
+            margin: 0 0 10px;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        #chat-input-container {
+            display: flex;
+            align-items: center;
+        }
+        #chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        #send-button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            background-color: #f67280;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #e55039;
+        }
+        #send-button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 左側：WebRTC 播放視窗與功能按鈕 -->
+        <div class="video-container">
+            <video id="liveVideo" autoplay playsinline muted></video>
+            <div class="button-container">
+                <button class="screen-share-btn" id="screenShareButton">分享螢幕</button>
+                <button class="camera-btn" id="cameraShareButton">分享鏡頭</button>
+                <button class="stop-btn" id="stopButton">STOP</button>
+            </div>
+        </div>
+        <!-- 右側：聊天室 -->
+        <div class="chat-box">
+            <h2>聊天室</h2>
+            <div id="messages"></div>
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="輸入訊息...">
+                <button id="send-button">發送</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const liveVideo = document.getElementById('liveVideo');
+        const screenShareButton = document.getElementById('screenShareButton');
+        const cameraShareButton = document.getElementById('cameraShareButton');
+        const stopButton = document.getElementById('stopButton');
+        const messagesDiv = document.getElementById('messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
+
+        let localStream;
+
+        // 分享螢幕功能
+        screenShareButton.addEventListener('click', async () => {
+            try {
+                const screenStream = await navigator.mediaDevices.getDisplayMedia({
+                    video: true
+                });
+                liveVideo.srcObject = screenStream;
+                localStream = screenStream;
+            } catch (err) {
+                console.error('無法分享螢幕:', err);
+                alert('無法啟用螢幕分享功能！');
+            }
+        });
+
+        // 分享鏡頭視訊
+        cameraShareButton.addEventListener('click', async () => {
+            try {
+                const cameraStream = await navigator.mediaDevices.getUserMedia({
+                    video: true,
+                    audio: true
+                });
+                liveVideo.srcObject = cameraStream;
+                localStream = cameraStream;
+            } catch (err) {
+                console.error('無法分享鏡頭:', err);
+                alert('無法啟用鏡頭分享功能！');
+            }
+        });
+
+        // 停止串流功能
+        stopButton.addEventListener('click', () => {
+            if (localStream) {
+                localStream.getTracks().forEach(track => track.stop());
+                liveVideo.srcObject = null;
+                localStream = null;
+                alert('分享已停止！');
+            } else {
+                alert('目前沒有進行中的分享！');
+            }
+        });
+
+        // 發送聊天室訊息
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message) {
+                addMessageToChat(`你: ${message}`);
+                chatInput.value = '';
+            }
+        }
+
+        function addMessageToChat(message) {
+            const messageElem = document.createElement('p');
+            messageElem.textContent = message;
+            messagesDiv.appendChild(messageElem);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+    </script>
+</body>
+</html>
