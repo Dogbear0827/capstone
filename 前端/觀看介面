@@ -48,11 +48,11 @@
             max-width: 960px;
             height: 540px; /* 設置固定高度 */
             position: relative;
+            background-color: #000; /* 背景色，以防 WebRTC 還沒有連線 */
         }
-        iframe {
+        video {
             width: 100%;
             height: 100%;
-            border: none;
             border-radius: 8px;
         }
         .button-container {
@@ -233,8 +233,8 @@
 
     <div class="main-content">
         <div class="video-container">
-            <!-- 直播視窗（YouTube 直播嵌入） -->
-            <iframe src="https://www.youtube.com/embed/live_stream?channel=YOUR_CHANNEL_ID_HERE" frameborder="0" allow="autoplay; encrypted-media" allowfullscreen></iframe>
+            <!-- WebRTC 視訊容器 -->
+            <video id="webRTCVideo" autoplay playsinline></video>
         </div>
         <div class="button-container">
             <button class="subscribe-btn" onclick="showSubscriptionModal()">訂閱</button>
@@ -273,8 +273,8 @@
         </div>
     </div>
 
-       <!-- 送禮視窗 -->
-       <div class="gift-modal" id="giftModal">
+    <!-- 送禮視窗 -->
+    <div class="gift-modal" id="giftModal">
         <div class="gift-modal-content">
             <h2>選擇要贈送的禮物</h2>
             <div class="gift-item" onclick="sendGift('火箭', 100)">
@@ -296,6 +296,7 @@
             <button class="cancel-btn" onclick="closeGiftModal()">取消</button>
         </div>
     </div>
+
     <!-- 追隨 Modal -->
     <div id="followModal" class="follow-modal">
         <div class="follow-modal-content">
@@ -361,8 +362,8 @@
             document.getElementById('subscriptionModal').style.display = 'none';
         }
 
-            // 顯示送禮視窗
-            function showGiftModal() {
+        // 顯示送禮視窗
+        function showGiftModal() {
             document.getElementById('giftModal').style.display = 'flex';
         }
 
@@ -376,7 +377,6 @@
         function closeGiftModal() {
             document.getElementById('giftModal').style.display = 'none';
         }
-
 
         // 顯示已追隨提示
         function closeFollowModal() {
@@ -411,6 +411,47 @@
             input.value += emoji;
             toggleEmojiPicker();
         }
+
+        // WebRTC 相關功能
+        let localStream;
+        let peerConnection;
+        const videoElement = document.getElementById('webRTCVideo');
+
+        // 初始化 WebRTC 連接
+        function initializeWebRTC() {
+            // 預設設定
+            const configuration = {
+                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]  // 使用Google的STUN伺服器
+            };
+            peerConnection = new RTCPeerConnection(configuration);
+
+            // 設定 WebRTC 連接
+            peerConnection.onicecandidate = (event) => {
+                if (event.candidate) {
+                    console.log('新ICE候選:', event.candidate);
+                    // 發送candidate到對方
+                }
+            };
+
+            peerConnection.ontrack = (event) => {
+                // 播放接收到的視訊流
+                videoElement.srcObject = event.streams[0];
+            };
+
+            // 取得本地視訊流並將其傳送到對方
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+                .then((stream) => {
+                    localStream = stream;
+                    videoElement.srcObject = localStream;
+                    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
+                })
+                .catch((error) => {
+                    console.error('無法啟動相機或麥克風:', error);
+                });
+        }
+
+        // 啟動 WebRTC
+        initializeWebRTC();
     </script>
 </body>
 </html>
