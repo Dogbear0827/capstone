@@ -65,6 +65,7 @@
             border-radius: 10px;
             overflow: hidden;
             transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
         }
 
         .video-card:hover {
@@ -199,7 +200,7 @@
 
     <div class="video-grid">
         <!-- Video 1 -->
-        <div class="video-card">
+        <div class="video-card" onclick="window.location.href='../watch.html';">
             <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+1');"></div>
             <div class="video-info">
                 <div class="video-title">Video Title 1</div>
@@ -208,7 +209,7 @@
         </div>
 
         <!-- Video 2 -->
-        <div class="video-card">
+        <div class="video-card" onclick="window.location.href='../watch.html';">
             <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+2');"></div>
             <div class="video-info">
                 <div class="video-title">Video Title 2</div>
@@ -217,7 +218,7 @@
         </div>
 
         <!-- Video 3 -->
-        <div class="video-card">
+        <div class="video-card" onclick="window.location.href='../watch.html';">
             <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+3');"></div>
             <div class="video-info">
                 <div class="video-title">Video Title 3</div>
@@ -226,7 +227,7 @@
         </div>
 
         <!-- Video 4 -->
-        <div class="video-card">
+        <div class="video-card" onclick="window.location.href='../watch.html';">
             <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+4');"></div>
             <div class="video-info">
                 <div class="video-title">Video Title 4</div>
@@ -243,10 +244,10 @@
     function logout() {
         alert('Logged out!');
     }
-
+  
     function toggleStreamerMode() {
         alert('Streamer Mode Activated!');
-        // Add your Streamer Mode logic here
+        window.location.href = '../streamer.html'; // 跳轉到指定頁面// Add your Streamer Mode logic here
     }
 </script>
 
