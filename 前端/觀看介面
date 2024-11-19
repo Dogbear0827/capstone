@@ -413,7 +413,6 @@
         }
 
         // WebRTC 相關功能
-        let localStream;
         let peerConnection;
         const videoElement = document.getElementById('webRTCVideo');
 
@@ -429,7 +428,7 @@
             peerConnection.onicecandidate = (event) => {
                 if (event.candidate) {
                     console.log('新ICE候選:', event.candidate);
-                    // 發送candidate到對方
+                    // 發送candidate到對方 (可以改為WebSocket或其他方式進行傳遞)
                 }
             };
 
@@ -437,21 +436,20 @@
                 // 播放接收到的視訊流
                 videoElement.srcObject = event.streams[0];
             };
-
-            // 取得本地視訊流並將其傳送到對方
-            navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-                .then((stream) => {
-                    localStream = stream;
-                    videoElement.srcObject = localStream;
-                    localStream.getTracks().forEach(track => peerConnection.addTrack(track, localStream));
-                })
-                .catch((error) => {
-                    console.error('無法啟動相機或麥克風:', error);
-                });
         }
 
-        // 啟動 WebRTC
-        initializeWebRTC();
+        // 當接收到來自主播端的offer時，設定peerConnection
+        async function receiveOfferAndAnswer(offer) {
+            initializeWebRTC();
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            // 將answer發送回主播端 (可以改為WebSocket或其他方式進行傳遞)
+        }
+
+        // 假設接收來自主播的offer，這裡需要替換為實際的WebSocket傳遞邏輯
+        const sampleOffer = {}; // 假設這是一個有效的offer物件
+        receiveOfferAndAnswer(sampleOffer);
     </script>
 </body>
 </html>
