@@ -56,8 +56,13 @@
             border-radius: 8px;
         }
         .button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            margin-top: 10px;
+            gap: 10px;
+            z-index: 10;
         }
         button {
             width: 100px;
@@ -171,7 +176,7 @@
             transform: scale(1.2);
         }
         /* 訂閱和送禮視窗樣式 */
-        .modal, .gift-modal, .follow-modal {
+        .modal, .gift-modal, .follow-modal, .connection-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -182,7 +187,7 @@
             justify-content: center;
             align-items: center;
         }
-        .modal-content, .gift-modal-content, .follow-modal-content {
+        .modal-content, .gift-modal-content, .follow-modal-content, .connection-modal-content {
             background: #fff;
             padding: 20px;
             border-radius: 8px;
@@ -225,7 +230,7 @@
 <body>
     <!-- Sidebar with followed streamers -->
     <div class="sidebar">
-        <h2>追隨的實況主</h2>
+        <h2>追隨的實活主</h2>
         <ul id="followed-list">
             <!-- This list will be dynamically updated with followed streamers -->
         </ul>
@@ -239,7 +244,7 @@
         <div class="button-container">
             <button class="subscribe-btn" onclick="showSubscriptionModal()">訂閱</button>
             <button class="share-btn" onclick="showGiftModal()">送禮</button>
-            <button id="follow-btn" class="follow-btn" onclick="toggleFollow('實況主 1')">追隨</button>
+            <button id="follow-btn" class="follow-btn" onclick="toggleFollow('實活主 1')">追隨</button>
             <button class="ring-btn" onclick="alert('鈴鐺按鈕被點擊！')">
                 <img src="https://img.icons8.com/ios-filled/50/ffffff/bell.png" alt="鈴鐺" class="bell-icon">
             </button>
@@ -301,15 +306,15 @@
     <div id="followModal" class="follow-modal">
         <div class="follow-modal-content">
             <h2>已追隨</h2>
-            <p>您已經追隨這個實況主。</p>
+            <p>您已經追隨這個實活主。</p>
             <button class="cancel-btn" onclick="closeFollowModal()">取消</button>
         </div>
     </div>
 
     <script>
-        const userName = "User123";
+        const userName = "User1";
         const followedList = document.getElementById('followed-list');
-        let followedStreamers = [];  // 存儲已追隨的實況主
+        let followedStreamers = [];  // 存儲已追隨的實活主
 
         // 切換追隨狀態
         function toggleFollow(streamerName) {
@@ -327,7 +332,7 @@
             }
         }
 
-        // 添加追隨的實況主到側邊欄
+        // 添加追隨的實活主到側邊欄
         function addFollowedStreamer(streamerName) {
             const listItem = document.createElement('li');
             listItem.classList.add('followed-streamer');
@@ -335,7 +340,7 @@
             followedList.appendChild(listItem);
         }
 
-        // 從側邊欄移除追隨的實況主
+        // 從側邊欄移除追隨的實活主
         function removeFollowedStreamer(streamerName) {
             const listItems = followedList.getElementsByTagName('li');
             for (let item of listItems) {
@@ -422,14 +427,28 @@
     signalingSocket.onmessage = async (message) => {
         const data = JSON.parse(message.data);
         if (data.type === 'offer') {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-            const answer = await peerConnection.createAnswer();
-            await peerConnection.setLocalDescription(answer);
-            signalingSocket.send(JSON.stringify(answer));
+            showConnectionModal(data);
         } else if (data.type === 'candidate') {
             await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
         }
     };
+
+    function showConnectionModal(data) {
+        const modal = document.getElementById('connectionModal');
+        modal.style.display = 'flex';
+
+        document.getElementById('acceptConnectionButton').onclick = async () => {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+            const answer = await peerConnection.createAnswer();
+            await peerConnection.setLocalDescription(answer);
+            signalingSocket.send(JSON.stringify({ type: 'answer', sdp: answer.sdp }));
+            modal.style.display = 'none';
+        };
+
+        document.getElementById('rejectConnectionButton').onclick = () => {
+            modal.style.display = 'none';
+        };
+    }
 
     // 處理接收到的遠端串流
     peerConnection.ontrack = (event) => {
@@ -443,7 +462,6 @@
         }
     };
 
-        
     </script>
 </body>
 </html>
