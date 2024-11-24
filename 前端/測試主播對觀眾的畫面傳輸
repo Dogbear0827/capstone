@@ -46,12 +46,14 @@
             right: 5%;
         }
         .button-container {
-            position: absolute;
-            bottom: 20px;
-            left: 20px;
-            display: flex;
-            gap: 10px;
-        }
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 10; /* 確保按鈕在最上層 */
+    }
         button {
             padding: 10px 15px;
             font-size: 16px;
@@ -147,7 +149,7 @@
             </div>
         </div>
     </div>
-
+    <script src="signaling-server.js"></script>
     <script>
         const screenVideo = document.getElementById('screenVideo');
         const cameraVideo = document.getElementById('cameraVideo');
@@ -168,6 +170,8 @@
                     video: true
                 });
                 screenVideo.srcObject = screenStream;
+                screenStream.getTracks().forEach(track => peerConnection.addTrack(track, screenStream));
+                startStreaming();
             } catch (err) {
                 console.error('無法分享螢幕:', err);
                 alert('無法啟用螢幕分享功能！');
@@ -182,6 +186,8 @@
                     audio: true
                 });
                 cameraVideo.srcObject = cameraStream;
+                cameraStream.getTracks().forEach(track => peerConnection.addTrack(track, cameraStream));
+                startStreaming();
             } catch (err) {
                 console.error('無法分享鏡頭:', err);
                 alert('無法啟用鏡頭分享功能！');
@@ -278,43 +284,44 @@
         }
 
         const signalingServerUrl = 'ws://localhost:8080';
-    const signalingSocket = new WebSocket(signalingServerUrl);
-    const peerConnection = new RTCPeerConnection({
-        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
-    });
+        const signalingSocket = new WebSocket(signalingServerUrl);
+        const peerConnection = new RTCPeerConnection({
+            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+        });
 
-    signalingSocket.onmessage = async (message) => {
-        const data = JSON.parse(message.data);
-        if (data.type === 'answer') {
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
-        } else if (data.type === 'candidate') {
-            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+        signalingSocket.onopen = () => {
+            console.log('Connected to the signaling server');
+        };
+
+        signalingSocket.onmessage = async (message) => {
+            const data = JSON.parse(message.data);
+            if (data.type === 'answer') {
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
+            } else if (data.type === 'candidate') {
+                await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+            }
+        };
+
+        async function startStreaming() {
+            try {
+                // 創建 offer 並發送給觀眾端
+                const offer = await peerConnection.createOffer();
+                await peerConnection.setLocalDescription(offer);
+                signalingSocket.send(JSON.stringify({ type: 'offer', sdp: offer.sdp }));
+            } catch (err) {
+                console.error('分享時發生錯誤:', err);
+            }
         }
-    };
 
-    // 分享螢幕並建立 WebRTC 連接
-    async function startStreaming() {
-        try {
-            const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
-            document.getElementById('screenVideo').srcObject = stream;
-            stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+        peerConnection.onicecandidate = (event) => {
+            if (event.candidate) {
+                signalingSocket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+            }
+        };
 
-            // 創建 offer 並發送給觀眾端
-            const offer = await peerConnection.createOffer();
-            await peerConnection.setLocalDescription(offer);
-            signalingSocket.send(JSON.stringify(offer));
-        } catch (err) {
-            console.error('分享螢幕時發生錯誤:', err);
-        }
-    }
-
-    // 處理 ICE 候選者
-    peerConnection.onicecandidate = (event) => {
-        if (event.candidate) {
-            signalingSocket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
-        }
-    };
-
+        peerConnection.ontrack = (event) => {
+            console.log('Track received:', event);
+        };
     </script>
 </body>
 </html>
