@@ -413,43 +413,37 @@
         }
 
         // WebRTC 相關功能
-        let peerConnection;
-        const videoElement = document.getElementById('webRTCVideo');
+        const signalingServerUrl = 'ws://localhost:8080';
+    const signalingSocket = new WebSocket(signalingServerUrl);
+    const peerConnection = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    });
 
-        // 初始化 WebRTC 連接
-        function initializeWebRTC() {
-            // 預設設定
-            const configuration = {
-                iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]  // 使用Google的STUN伺服器
-            };
-            peerConnection = new RTCPeerConnection(configuration);
-
-            // 設定 WebRTC 連接
-            peerConnection.onicecandidate = (event) => {
-                if (event.candidate) {
-                    console.log('新ICE候選:', event.candidate);
-                    // 發送candidate到對方 (可以改為WebSocket或其他方式進行傳遞)
-                }
-            };
-
-            peerConnection.ontrack = (event) => {
-                // 播放接收到的視訊流
-                videoElement.srcObject = event.streams[0];
-            };
-        }
-
-        // 當接收到來自主播端的offer時，設定peerConnection
-        async function receiveOfferAndAnswer(offer) {
-            initializeWebRTC();
-            await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    signalingSocket.onmessage = async (message) => {
+        const data = JSON.parse(message.data);
+        if (data.type === 'offer') {
+            await peerConnection.setRemoteDescription(new RTCSessionDescription(data));
             const answer = await peerConnection.createAnswer();
             await peerConnection.setLocalDescription(answer);
-            // 將answer發送回主播端 (可以改為WebSocket或其他方式進行傳遞)
+            signalingSocket.send(JSON.stringify(answer));
+        } else if (data.type === 'candidate') {
+            await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
         }
+    };
 
-        // 假設接收來自主播的offer，這裡需要替換為實際的WebSocket傳遞邏輯
-        const sampleOffer = {}; // 假設這是一個有效的offer物件
-        receiveOfferAndAnswer(sampleOffer);
+    // 處理接收到的遠端串流
+    peerConnection.ontrack = (event) => {
+        document.getElementById('webRTCVideo').srcObject = event.streams[0];
+    };
+
+    // 處理 ICE 候選者
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            signalingSocket.send(JSON.stringify({ type: 'candidate', candidate: event.candidate }));
+        }
+    };
+
+        
     </script>
 </body>
 </html>
