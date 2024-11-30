@@ -1,3 +1,5 @@
+這是基於`webrtc.js`與`index.html`製作的對應表
+
 # 變數與 HTML 元素對應表
 
 | 變數名稱               | 對應的 HTML 元素                      | HTML 元素的用途                          |
