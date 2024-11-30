@@ -1,4 +1,4 @@
-這是基於`webrtc.js`與`index.html`製作的對應表 \n
+這是基於`webrtc.js`與`index.html`製作的對應表  
 如果要減少部分變數，請對應減少`webrtc.js`的功能
 
 # 變數與 HTML 元素對應表
