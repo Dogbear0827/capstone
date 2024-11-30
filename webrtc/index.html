@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebRTC Video Chat</title>
+
+    <!-- 引入 Mini.css 來使用預設樣式 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/mini.css/3.0.1/mini-default.min.css" />
+
+    <style>
+        /* 自定義簡單的樣式 */
+        body {
+            margin: 20pt;
+        }
+
+        video {
+            width: 100%;
+            height: auto;
+        }
+
+        /* 彈跳視窗背景設置，預設隱藏 */
+        #modal {
+            display: none;
+            background-color: rgba(0, 0, 0, 0.5);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #modalContent {
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            width: 400px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登入區塊，讓用戶輸入用戶名稱 -->
+    <div id="myName">
+        <input type="text" id="usernameInput" placeholder="Username" />
+        <input type="submit" onclick="loginClick(this)" class="primary" value="登入" />
+    </div>
+
+    <!-- 顯示所有在線用戶 -->
+    <div>
+        <h3><span id="allUsers"></span></h3>
+    </div>
+
+    <!-- WebRTC 視頻聊天顯示區域，登入後顯示 -->
+    <div id="otherElements" hidden>
+        <div class="container">
+            <div class="row">
+                <div class="col-sm-12 col-md-6">
+                    <video id="localVideo" autoplay muted></video>
+                    <b><span id="showLocalUserName"></span></b>
+                </div>
+                <div class="col-sm-12 col-md-6">
+                    <video id="remoteVideo" autoplay></video>
+                    <audio id="remoteAudio" autoplay></audio>
+                    <b><span id="showRemoteUserName"></span></b>
+                </div>
+            </div>
+        </div>
+
+        <br />
+        <!-- 撥號區塊 -->
+        <div id="callInitiator">
+            <input id="callToUsernameInput" type="text" placeholder="username to call" />
+            <br />
+            <button onclick="callBtnClick()" class="primary">Call</button>
+        </div>
+
+        <!-- 接聽區塊 -->
+        <div id="callReceiver" style="display: none">
+            <button id="answerBtn" class="primary">Answer</button>
+            <button id="declineBtn" class="secondary">Decline</button>
+        </div>
+
+        <!-- 通話中掛斷按鈕 -->
+        <div id="callOngoing" style="display: none">
+            <button onclick="hangUpClick()" class="secondary">Hang Up</button>
+        </div>
+    </div>
+
+    <!-- 彈跳視窗提示，用於顯示 Chrome 使用者的提示訊息 -->
+    <div id="modal">
+        <div id="modalContent">
+            <h2>Chrome 分享提示</h2>
+            <p>請注意，Chrome 會要求您兩次選擇，第一次選擇分享畫面後，第二次會要求分享音訊。</p>
+            <p>如果第二次出現提示，您可以選擇取消音訊分享。</p>
+            <button onclick="closeModal()">我知道了</button>
+        </div>
+    </div>
+
+    <!-- 引入 WebRTC 相關的 JS 檔案 -->
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="webrtc.js"></script>
+
+    <script>
+        // 關閉彈跳視窗
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // 檢查是否為 Chrome，並顯示彈跳視窗
+        window.onload = function() {
+            if (/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor)) {
+                document.getElementById('modal').style.display = 'flex';
+            }
+        };
+    </script>
+</body>
+</html>
