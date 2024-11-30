@@ -164,7 +164,7 @@
             transform: scale(1.2);
         }
         /* 訂閱和送禮視窗樣式 */
-        .modal, .gift-modal, .follow-modal, .connection-modal {
+        .modal, .gift-modal, .follow-modal {
             display: none;
             position: fixed;
             top: 0;
@@ -175,7 +175,7 @@
             justify-content: center;
             align-items: center;
         }
-        .modal-content, .gift-modal-content, .follow-modal-content, .connection-modal-content {
+        .modal-content, .gift-modal-content, .follow-modal-content {
             background: #fff;
             padding: 20px;
             border-radius: 8px;
@@ -291,16 +291,7 @@
         </div>
     </div>
 
-    <!-- WebSocket 連接狀態 Modal -->
-    <div id="connectionModal" class="connection-modal">
-        <div class="connection-modal-content">
-            <h2>正在建立連接...</h2>
-            <p>請稍候...</p>
-        </div>
-    </div>
-
     <script>
-        // 資料操作和功能
         const followedList = [];
 
         function toggleFollow(streamer) {
@@ -346,7 +337,7 @@
                 const messageElement = document.createElement("div");
                 messageElement.textContent = message;
                 messageContainer.appendChild(messageElement);
-                document.getElementById("chat-input").value = '';  // 清空輸入框
+                document.getElementById("chat-input").value = '';
             }
         }
 
@@ -382,30 +373,14 @@
             alert('您已成功送出禮物！');
             closeGiftModal();
         }
-    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
-    <script src="webrtc.js"></script>
 
         // Follow Modal
         function closeFollowModal() {
             document.getElementById('followModal').style.display = 'none';
         }
-
-        // WebSocket連接
-        function showConnectionModal() {
-            document.getElementById('connectionModal').style.display = 'flex';
-        }
-
-        // 開啟和關閉 WebSocket 連接
-        function openConnection() {
-            showConnectionModal();
-            // 假設連接成功後會自動關閉這個 modal
-            setTimeout(() => {
-                document.getElementById('connectionModal').style.display = 'none';
-            }, 3000);
-        }
-
-        // 初始化
-        openConnection();
     </script>
+    <!-- 引入 WebRTC 相關的 JS 檔案 -->
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="webrtc.js"></script>
 </body>
 </html>
