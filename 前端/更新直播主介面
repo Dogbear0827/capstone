@@ -177,8 +177,30 @@
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
     </script>
+ <!-- 彈跳視窗提示，用於顯示 Chrome 使用者的提示訊息 -->
+    <div id="modal">
+        <div id="modalContent">
+            <h2>Chrome 分享提示</h2>
+            <p>請注意，Chrome 會要求您兩次選擇，第一次選擇分享畫面後，第二次會要求分享音訊。</p>
+            <p>如果第二次出現提示，您可以選擇取消音訊分享。</p>
+            <button onclick="closeModal()">我知道了</button>
+        </div>
+    </div>
   <!-- 引入 WebRTC 相關的 JS 檔案 -->
     <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
     <script src="webrtc.js"></script>
+  <script>
+        // 關閉彈跳視窗
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        // 檢查是否為 Chrome，並顯示彈跳視窗
+        window.onload = function() {
+            if (/Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor)) {
+                document.getElementById('modal').style.display = 'flex';
+            }
+        };
+    </script>
 </body>
 </html>
