@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoodStream</title>
+    <style>
+        body {
+            background-color: #f8eeee;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #d1a8a8;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #c2c2c2;
+        }
+        .followed-streamer {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #c2c2c2;
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .followed-streamer:hover {
+            background-color: #b0b0b0;
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1vh;
+            box-sizing: border-box;
+            margin-left: 20px;
+            margin-right: 25vw;
+        }
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        button {
+            width: 100px;
+            height: 40px;
+            margin: 0 10px;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .subscribe-btn { background: #6fe4f8; }
+        .share-btn { background: #DC3545; }
+        .follow-btn { background: #28a745; }
+        .ring-btn {
+            background: #6F42C1;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .bell-icon {
+            width: 20px;
+            height: 20px;
+        }
+        button:hover { opacity: 0.8; }
+        .chat-box {
+            width: 25vw;
+            height: 100vh;
+            background: #fff;
+            border-left: 1px solid #ccc;
+            padding: 1vw;
+            position: fixed;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 20px 0 0 20px;
+            overflow: hidden;
+        }
+        h2 {
+            margin: 0;
+            padding: 10px 0;
+            text-align: center;
+        }
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        #chat-input {
+            width: calc(100% - 50px);
+            padding: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        #send-button {
+            width: 100%;
+            height: 35px;
+            margin-bottom: 25px;
+            font-size: 18px;
+            text-align: center;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+        #send-button:active {
+            transform: scale(0.95);
+        }
+        #emoji-btn {
+            width: 35px;
+            height: 35px;
+            background-color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            position: absolute;
+            right: -20px;
+            top: 0;
+            padding: 5px;
+        }
+
+        #emoji-btn img {
+            width: 30px;
+            height: 30px;
+        }
+        #emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 8px;
+            z-index: 10;
+        }
+        .emoji {
+            cursor: pointer;
+            margin: 5px;
+            font-size: 20px;
+        }
+        .emoji:hover {
+            transform: scale(1.2);
+        }
+        /* 訂閱和送禮視窗樣式 */
+        .modal, .gift-modal, .follow-modal, .connection-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content, .gift-modal-content, .follow-modal-content, .connection-modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .gift-item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .gift-image {
+            width: 60px;
+            height: 60px;
+        }
+        .confirm-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .confirm-btn:hover {
+            background-color: #0056b3;
+        }
+        .cancel-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .cancel-btn:hover {
+            background-color: #5a6268;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar with followed streamers -->
+    <div class="sidebar">
+        <h2>追隨的實活主</h2>
+        <ul id="followed-list">
+            <!-- This list will be dynamically updated with followed streamers -->
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <div class="button-container">
+            <button class="subscribe-btn" onclick="showSubscriptionModal()">訂閱</button>
+            <button class="share-btn" onclick="showGiftModal()">送禮</button>
+            <button id="follow-btn" class="follow-btn" onclick="toggleFollow('實活主 1')">追隨</button>
+            <button class="ring-btn" onclick="alert('鈴鐺按鈕被點擊！')">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/bell.png" alt="鈴鐺" class="bell-icon">
+            </button>
+        </div>
+    </div>
+
+    <div class="chat-box">
+        <h2>聊天室</h2>
+        <div id="messages"></div>
+        <div style="position: relative;">
+            <input type="text" id="chat-input" placeholder="輸入訊息..." />
+            <button id="emoji-btn" onclick="toggleEmojiPicker()">
+                <img src="https://img.icons8.com/ios-filled/50/000000/like.png" alt="emoji" />
+            </button>
+            <div id="emoji-picker">
+                <span class="emoji" onclick="addEmoji('😊')">😊</span>
+                <span class="emoji" onclick="addEmoji('😂')">😂</span>
+                <span class="emoji" onclick="addEmoji('❤️')">❤️</span>
+                <span class="emoji" onclick="addEmoji('😎')">😎</span>
+            </div>
+            <button id="send-button" onclick="sendMessage()">發送</button>
+        </div>
+    </div>
+
+    <!-- 訂閱 Modal -->
+    <div id="subscriptionModal" class="modal">
+        <div class="modal-content">
+            <h2>確定要花美金7777$訂閱嗎？</h2>
+            <button class="confirm-btn" onclick="confirmSubscription()">確定</button>
+            <button class="cancel-btn" onclick="closeModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- 送禮視窗 -->
+    <div class="gift-modal" id="giftModal">
+        <div class="gift-modal-content">
+            <h2>選擇要贈送的禮物</h2>
+            <div class="gift-item" onclick="selectGift('玫瑰花')">
+                <img src="https://img.icons8.com/ios-filled/50/000000/rose.png" alt="Rose" class="gift-image" />
+                <p>玫瑰花</p>
+            </div>
+            <div class="gift-item" onclick="selectGift('禮物箱')">
+                <img src="https://img.icons8.com/ios-filled/50/000000/gift.png" alt="Gift Box" class="gift-image" />
+                <p>禮物箱</p>
+            </div>
+            <div class="gift-item" onclick="selectGift('鑽石')">
+                <img src="https://img.icons8.com/ios-filled/50/000000/diamond.png" alt="Diamond" class="gift-image" />
+                <p>鑽石</p>
+            </div>
+            <button class="confirm-btn" onclick="confirmGift()">確定</button>
+            <button class="cancel-btn" onclick="closeGiftModal()">取消</button>
+        </div>
+    </div>
+
+    <!-- Follow Modal -->
+    <div id="followModal" class="follow-modal">
+        <div class="follow-modal-content">
+            <h2>已追隨！</h2>
+            <button class="confirm-btn" onclick="closeFollowModal()">關閉</button>
+        </div>
+    </div>
+
+    <!-- WebSocket 連接狀態 Modal -->
+    <div id="connectionModal" class="connection-modal">
+        <div class="connection-modal-content">
+            <h2>正在建立連接...</h2>
+            <p>請稍候...</p>
+        </div>
+    </div>
+
+    <script>
+        // 資料操作和功能
+        const followedList = [];
+
+        function toggleFollow(streamer) {
+            if (followedList.includes(streamer)) {
+                followedList.splice(followedList.indexOf(streamer), 1);
+                alert('已取消追隨 ' + streamer);
+                document.getElementById("follow-btn").innerText = "追隨";
+            } else {
+                followedList.push(streamer);
+                alert('已追隨 ' + streamer);
+                document.getElementById("follow-btn").innerText = "取消追隨";
+            }
+            updateFollowedList();
+        }
+
+        function updateFollowedList() {
+            const followedListContainer = document.getElementById("followed-list");
+            followedListContainer.innerHTML = '';
+            followedList.forEach(streamer => {
+                const li = document.createElement('li');
+                li.classList.add('followed-streamer');
+                li.innerText = streamer;
+                followedListContainer.appendChild(li);
+            });
+        }
+
+        // Emoji Picker 功能
+        function toggleEmojiPicker() {
+            const emojiPicker = document.getElementById("emoji-picker");
+            emojiPicker.style.display = emojiPicker.style.display === "block" ? "none" : "block";
+        }
+
+        function addEmoji(emoji) {
+            document.getElementById("chat-input").value += emoji;
+            toggleEmojiPicker();
+        }
+
+        // 聊天功能
+        function sendMessage() {
+            const message = document.getElementById("chat-input").value;
+            if (message.trim() !== '') {
+                const messageContainer = document.getElementById("messages");
+                const messageElement = document.createElement("div");
+                messageElement.textContent = message;
+                messageContainer.appendChild(messageElement);
+                document.getElementById("chat-input").value = '';  // 清空輸入框
+            }
+        }
+
+        // 訂閱 Modal 顯示和關閉
+        function showSubscriptionModal() {
+            document.getElementById('subscriptionModal').style.display = 'flex';
+        }
+
+        function confirmSubscription() {
+            alert('您已成功訂閱！');
+            closeModal();
+        }
+
+        function closeModal() {
+            document.getElementById('subscriptionModal').style.display = 'none';
+        }
+
+        // 送禮視窗顯示和關閉
+        function showGiftModal() {
+            document.getElementById('giftModal').style.display = 'flex';
+        }
+
+        function closeGiftModal() {
+            document.getElementById('giftModal').style.display = 'none';
+        }
+
+        function selectGift(gift) {
+            alert(`已選擇送出 ${gift}`);
+            closeGiftModal();
+        }
+
+        function confirmGift() {
+            alert('您已成功送出禮物！');
+            closeGiftModal();
+        }
+    <script src="https://webrtc.github.io/adapter/adapter-latest.js"></script>
+    <script src="webrtc.js"></script>
+
+        // Follow Modal
+        function closeFollowModal() {
+            document.getElementById('followModal').style.display = 'none';
+        }
+
+        // WebSocket連接
+        function showConnectionModal() {
+            document.getElementById('connectionModal').style.display = 'flex';
+        }
+
+        // 開啟和關閉 WebSocket 連接
+        function openConnection() {
+            showConnectionModal();
+            // 假設連接成功後會自動關閉這個 modal
+            setTimeout(() => {
+                document.getElementById('connectionModal').style.display = 'none';
+            }, 3000);
+        }
+
+        // 初始化
+        openConnection();
+    </script>
+</body>
+</html>
