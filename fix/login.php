@@ -59,6 +59,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             session_start();
             $_SESSION['username'] = $user['username'];
             echo json_encode(['status' => 'success', 'message' => '登入成功！']);
+           header("Location: streaming_page.php"); // Redirect to the main page
+            exit();
         } else {
             // 密碼錯誤
             echo json_encode(['status' => 'error', 'messages' => ['密碼錯誤，請再試一次']]);
