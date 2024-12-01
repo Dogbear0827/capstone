@@ -1,173 +1,196 @@
-/** @type {RTCPeerConnection} */
-let yourConn;  // 用來處理 WebRTC 連線的物件
-let localStream;  // 用來儲存本地媒體流（視訊/音訊）
-let serverConnection = new WebSocket('wss://' + window.location.hostname + ':8080');  // 與伺服器建立 WebSocket 連線
-let screenStream;  // 用來儲存螢幕分享的媒體流
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>直播主後台</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background-color: #f8eeee;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .main-container {
+            display: flex;
+            flex: 1;
+        }
+        .video-container {
+            flex: 3;
+            background-color: #f8eeee;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        video {
+            width: 100%;
+            max-width: 960px;
+            height: 540px;
+            background-color: #000;
+            border-radius: 8px;
+        }
+        .button-container {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+        }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            color: #fff;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .screen-share-btn {
+            background-color: #f67280;
+        }
+        .camera-btn {
+            background-color: #f8a5c2;
+        }
+        .stop-btn {
+            background-color: #ea8685;
+        }
+        button:hover {
+            opacity: 0.8;
+        }
+        button:active {
+            transform: scale(0.95);
+        }
+        .chat-box {
+            flex: 1;
+            background-color: #fff;
+            border-left: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            padding: 15px;
+            overflow: hidden;
+        }
+        h2 {
+            text-align: center;
+            margin: 0 0 10px;
+        }
+        #messages {
+            flex: 1;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 10px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+        }
+        #chat-input-container {
+            display: flex;
+            align-items: center;
+        }
+        #chat-input {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        #send-button {
+            margin-left: 10px;
+            padding: 10px 15px;
+            background-color: #f67280;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        #send-button:hover {
+            background-color: #e55039;
+        }
+        #send-button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- 左側：WebRTC 播放視窗與功能按鈕 -->
+        <div class="video-container">
+            <video id="liveVideo" autoplay playsinline muted></video>
+            <div class="button-container">
+                <!-- 按鈕現在只是顯示，沒有任何動作 -->
+                <button class="screen-share-btn" id="screenShareButton">分享螢幕</button>
+                <button class="camera-btn" id="cameraShareButton">分享鏡頭</button>
+                <button class="stop-btn" id="stopButton">停止</button>
+            </div>
+        </div>
+        <!-- 右側：聊天室 -->
+        <div class="chat-box">
+            <h2>聊天室</h2>
+            <div id="messages"></div>
+            <div id="chat-input-container">
+                <input type="text" id="chat-input" placeholder="輸入訊息...">
+                <button id="send-button">發送</button>
+            </div>
+        </div>
+    </div>
 
-// HTML 元素的按鈕監聽器：分享媒體、分享螢幕、停止分享
-document.getElementById('shareMediaBtn').addEventListener('click', shareMedia);
-document.getElementById('shareScreenBtn').addEventListener('click', shareScreen);
-document.getElementById('stopSharingBtn').addEventListener('click', stopSharing);
+    <script>
+        // 這裡已經不需要處理任何視頻流，只保留按鈕顯示
+        const screenShareButton = document.getElementById('screenShareButton');
+        const cameraShareButton = document.getElementById('cameraShareButton');
+        const stopButton = document.getElementById('stopButton');
+        const messagesDiv = document.getElementById('messages');
+        const chatInput = document.getElementById('chat-input');
+        const sendButton = document.getElementById('send-button');
 
-// WebRTC ICE 伺服器配置，用於對等連線時發現對方
-const peerConnectionConfig = {
-    iceServers: [
-        { urls: 'stun:stun.stunprotocol.org:3478' },
-        { urls: 'stun:stun.l.google.com:19302' }
-    ]
-};
+        // 設定按鈕點擊事件，並且呼叫 streamer.js 內的對應方法
+        screenShareButton.addEventListener('click', shareScreen);
+        cameraShareButton.addEventListener('click', shareMedia);
+        stopButton.addEventListener('click', stopSharing);
 
-// 當 WebSocket 連線建立時
-serverConnection.onopen = () => {
-    console.log('已成功連接至伺服器');
-};
-
-// 當接收到伺服器的訊息時處理
-serverConnection.onmessage = gotMessageFromServer;
-
-function gotMessageFromServer(message) {
-    const data = JSON.parse(message.data);
-
-    switch (data.type) {
-        case 'login':
-            handleLogin(data.success);  // 處理登入回應
-            break;
-        case 'viewer_request':
-            handleViewerRequest(data.name);  // 當有觀眾請求連線時，回應觀眾
-            break;
-        case 'candidate':
-            handleCandidate(data.candidate);  // 處理 ICE 候選訊息
-            break;
-        default:
-            break;
-    }
-}
-
-// 處理登入訊息
-function handleLogin(success) {
-    if (success) {
-        console.log("成功登入");
-    } else {
-        alert('登入失敗');
-    }
-}
-
-// 當有觀眾要求連線時（觀眾進入直播間）
-function handleViewerRequest(viewerName) {
-    console.log('觀眾加入: ' + viewerName);
-    if (localStream) {
-        createOffer(viewerName);  // 觀眾加入後，創建 offer 讓觀眾觀看直播
-    }
-}
-
-// 創建 WebRTC 連線並向觀眾發送 offer
-function createOffer(viewerName) {
-    // 創建 RTCPeerConnection 物件
-    yourConn = new RTCPeerConnection(peerConnectionConfig);
-    yourConn.onicecandidate = handleICECandidate;  // 設定 ICE 候選處理函式
-    yourConn.ontrack = handleTrack;  // 設定 track 事件的處理函式
-
-    // 把本地媒體流的每個 track 加入到 WebRTC 連線
-    localStream.getTracks().forEach(track => {
-        yourConn.addTrack(track, localStream);
-    });
-
-    // 創建 WebRTC 連線的 offer 並設置本地描述
-    yourConn.createOffer()
-        .then(offer => {
-            yourConn.setLocalDescription(offer);
-            sendToServer({
-                type: 'offer',  // 訊息類型為「offer」
-                offer: offer,   // 傳送 offer 給伺服器
-                viewer: viewerName  // 傳送觀眾名稱
-            });
-        })
-        .catch(error => {
-            console.error("創建 offer 時出錯:", error);
+        // 發送聊天室訊息
+        sendButton.addEventListener('click', sendMessage);
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') sendMessage();
         });
-}
 
-// 處理 ICE 候選（用於 NAT 穿透）
-function handleICECandidate(event) {
-    if (event.candidate) {
-        sendToServer({
-            type: 'candidate',  // 訊息類型為「candidate」
-            candidate: event.candidate  // 傳送 ICE 候選
-        });
-    }
-}
-
-// 發送訊息到伺服器
-function sendToServer(msg) {
-    serverConnection.send(JSON.stringify(msg));  // 發送 JSON 格式的訊息
-}
-
-// #region 控制按鈕功能
-
-// 當點擊「分享媒體」按鈕時，開始分享本地媒體
-function shareMedia() {
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-        .then(stream => {
-            localStream = stream;  // 儲存本地媒體流
-            // 設置本地視訊
-            document.getElementById('localVideo').srcObject = stream;
-
-            // 當媒體流準備好後，創建 WebRTC 連線
-            localStream.getTracks().forEach(track => {
-                yourConn.addTrack(track, localStream);  // 將本地的 track 加入到 WebRTC 連線
-            });
-
-            console.log('開始分享媒體');
-        })
-        .catch(err => {
-            console.error("取得媒體失敗", err);  // 錯誤處理
-        });
-}
-
-// 當點擊「分享螢幕」按鈕時，開始分享螢幕
-function shareScreen() {
-    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-        .then(screenStream => {
-            // 假設需要將螢幕分享與本地的音訊流合併
-            let combinedStream = new MediaStream();
-
-            screenStream.getTracks().forEach(track => combinedStream.addTrack(track));  // 合併螢幕分享的 track
-            if (localStream) {
-                localStream.getTracks().forEach(track => combinedStream.addTrack(track));  // 合併本地媒體的 track
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message) {
+                addMessageToChat(`你: ${message}`);
+                chatInput.value = '';
             }
-
-            // 設置本地視訊顯示
-            document.getElementById('localVideo').srcObject = combinedStream;
-
-            // 創建 WebRTC 連線
-            yourConn = new RTCPeerConnection(peerConnectionConfig);
-            combinedStream.getTracks().forEach(track => {
-                yourConn.addTrack(track, combinedStream);  // 將合併後的 track 加入 WebRTC 連線
-            });
-
-            console.log('開始分享螢幕');
-        })
-        .catch(err => {
-            console.error("分享螢幕失敗", err);  // 錯誤處理
-        });
-}
-
-// 當點擊「停止分享」按鈕時，停止分享
-function stopSharing() {
-    if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());  // 停止所有本地媒體流
-        document.getElementById('localVideo').srcObject = null;  // 清空本地視訊顯示
-
-        if (screenStream) {
-            screenStream.getTracks().forEach(track => track.stop());  // 停止螢幕分享
         }
 
-        // 關閉 WebRTC 連線
-        if (yourConn) {
-            yourConn.close();
-            yourConn = null;  // 清空 WebRTC 連線物件
+        function addMessageToChat(message) {
+            const messageElem = document.createElement('p');
+            messageElem.textContent = message;
+            messagesDiv.appendChild(messageElem);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
 
-        console.log('已停止分享');
-    }
-}
+        // 引入 streamer.js 進行視訊和螢幕分享處理
+        function shareScreen() {
+            if (typeof shareScreen === 'function') {
+                shareScreen();
+            }
+        }
+
+        function shareMedia() {
+            if (typeof shareMedia === 'function') {
+                shareMedia();
+            }
+        }
+
+        function stopSharing() {
+            if (typeof stopSharing === 'function') {
+                stopSharing();
+            }
+        }
+    </script>
+
+  <!-- 引入 WebRTC 相關的 JS 檔案 -->
+    <script src="streamer.js"></script>
+
+</body>
+</html>
