@@ -87,7 +87,7 @@
             <input type="password" id="userpassword" name="userpassword" placeholder="密碼 (至少8位數)" required>
             <input type="password" id="confirm-password" name="confirm-password" placeholder="確認密碼" required>
             <input type="submit" value="註冊">
-            <button type="button" class="back-button" onclick="window.location.href='web/first.html'">返回</button>
+            <button type="button" class="back-button" onclick="window.location.href='first.html'">返回</button>
             <p id="error-message" class="error-message"></p>
         </form>
     </div>
@@ -142,7 +142,7 @@
                     if (response.status === "success") {
                         alert("註冊成功！");
                         // Optional:註冊成功後導向登入頁面
-                        window.location.href = "login.html";
+                        window.location.href = "first.html";
                     } else {
                         document.getElementById('error-message').textContent = response.messages.join(", ");
                     }
