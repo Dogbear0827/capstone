@@ -80,14 +80,19 @@
 <body>
     <div class="login-container">
         <h2>登錄</h2>
-        <form id="login-form">
+        <form id="login-form" action="choose.html" method="post">
             <input type="text" id="username" name="username" placeholder="使用者名稱" required>
             <input type="password" id="password" name="password" placeholder="密碼" required>
             <input type="submit" value="登錄">
-            <button type="button" class="back-button" onclick="window.location.href='web/first.html'">返回</button>
+            <button type="button" class="back-button" onclick="window.location.href='first.html'">返回</button>
             <p id="error-message" class="error-message"></p>
         </form>
+        <div class="links">
+            <a href="register.html" target="_self">註冊</a> | 
+            <a href="forgot-password">忘記密碼？</a>
+        </div>
     </div>
+    
 
     <script>
         // 驗證表單
@@ -131,7 +136,7 @@
                     if (response.status === "success") {
                         alert("登入成功！");
                         // Optional:登入成功後導向到個人檔案或主頁
-                         window.location.href = "choose.html";
+                        // window.location.href = "index.html";
                     } else {
                         document.getElementById('error-message').textContent = response.messages.join(", ");
                     }
@@ -144,3 +149,6 @@
     </script>
 </body>
 </html>
+
+
+
