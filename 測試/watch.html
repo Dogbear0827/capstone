@@ -1,4 +1,4 @@
-
+/*
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
@@ -383,4 +383,323 @@
     <!-- 引入 WebRTC 相關的 JS 檔案 -->
     <script src="viewer.js"></script>
 </body>
+</html>*/
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GoodStream</title>
+    <style>
+        body {
+            background-color: #f8eeee;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .sidebar {
+            width: 200px;
+            background-color: #d1a8a8;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #c2c2c2;
+        }
+        .followed-streamer {
+            margin-bottom: 15px;
+            padding: 10px;
+            background-color: #c2c2c2;
+            border-radius: 5px;
+            text-align: center;
+            transition: background-color 0.3s;
+            cursor: pointer;
+        }
+        .followed-streamer:hover {
+            background-color: #b0b0b0;
+        }
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 1vh;
+            box-sizing: border-box;
+            margin-left: 20px;
+            margin-right: 25vw;
+        }
+        .button-container {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+        button {
+            width: 100px;
+            height: 40px;
+            margin: 0 10px;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 20px;
+        }
+        .subscribe-btn { background: #6fe4f8; }
+        .share-btn { background: #DC3545; }
+        .follow-btn { background: #28a745; }
+        .ring-btn {
+            background: #6F42C1;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .bell-icon {
+            width: 20px;
+            height: 20px;
+        }
+        button:hover { opacity: 0.8; }
+        .chat-box {
+            width: 25vw;
+            height: 100vh;
+            background: #fff;
+            border-left: 1px solid #ccc;
+            padding: 1vw;
+            position: fixed;
+            top: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            border-radius: 20px 0 0 20px;
+            overflow: hidden;
+        }
+        h2 {
+            margin: 0;
+            padding: 10px 0;
+            text-align: center;
+        }
+        #messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        #chat-input {
+            width: calc(100% - 50px);
+            padding: 10px;
+            margin-bottom: 10px;
+            display: inline-block;
+        }
+        #send-button {
+            width: 100%;
+            height: 35px;
+            margin-bottom: 25px;
+            font-size: 18px;
+            text-align: center;
+            background-color: #007bff;
+            color: white;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        #send-button:hover {
+            background-color: #0056b3;
+        }
+        #send-button:active {
+            transform: scale(0.95);
+        }
+        #emoji-btn {
+            width: 35px;
+            height: 35px;
+            background-color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-block;
+            position: absolute;
+            right: -20px;
+            top: 0;
+            padding: 5px;
+        }
+
+        #emoji-btn img {
+            width: 30px;
+            height: 30px;
+        }
+        #emoji-picker {
+            display: none;
+            position: absolute;
+            bottom: 50px;
+            right: 50px;
+            background: white;
+            border: 1px solid #ccc;
+            padding: 5px;
+            border-radius: 8px;
+            z-index: 10;
+        }
+        .emoji {
+            cursor: pointer;
+            margin: 5px;
+            font-size: 20px;
+        }
+        .emoji:hover {
+            transform: scale(1.2);
+        }
+        /* 訂閱和送禮視窗樣式 */
+        .modal, .gift-modal, .follow-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content, .gift-modal-content, .follow-modal-content {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .gift-item {
+            display: inline-block;
+            margin: 10px;
+            text-align: center;
+            cursor: pointer;
+        }
+        .gift-image {
+            width: 60px;
+            height: 60px;
+        }
+        .confirm-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .confirm-btn:hover {
+            background-color: #0056b3;
+        }
+        .cancel-btn {
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .cancel-btn:hover {
+            background-color: #5a6268;
+        }
+        /* WebRTC Video Styling */
+        .video-container {
+            width: 80%;
+            height: 60vh;
+            background-color: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+        #viewer {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar with followed streamers -->
+    <div class="sidebar">
+        <h2>追隨的實活主</h2>
+        <ul id="followed-list">
+            <!-- This list will be dynamically updated with followed streamers -->
+        </ul>
+    </div>
+
+    <div class="main-content">
+        <!-- WebRTC Video Stream -->
+        <div class="video-container">
+            <video id="viewer" autoplay></video>
+        </div>
+
+        <div class="button-container">
+            <button class="subscribe-btn" onclick="showSubscriptionModal()">訂閱</button>
+            <button class="share-btn" onclick="showGiftModal()">送禮</button>
+            <button id="follow-btn" class="follow-btn" onclick="toggleFollow('實活主 1')">追隨</button>
+            <button class="ring-btn" onclick="alert('鈴鐺按鈕被點擊！')">
+                <img src="https://img.icons8.com/ios-filled/50/ffffff/bell.png" alt="鈴鐺" class="bell-icon">
+            </button>
+        </div>
+    </div>
+
+    <div class="chat-box">
+        <h2>聊天室</h2>
+        <div id="messages"></div>
+        <div style="position: relative;">
+            <input type="text" id="chat-input" placeholder="輸入訊息..." />
+            <button id="emoji-btn" onclick="toggleEmojiPicker()">
+                <img src="https://img.icons8.com/ios-filled/50/000000/like.png" alt="emoji" />
+            </button>
+            <div id="emoji-picker">
+                <span class="emoji" onclick="addEmoji('😊')">😊</span>
+                <span class="emoji" onclick="addEmoji('😂')">😂</span>
+                <span class="emoji" onclick="addEmoji('❤️')">❤️</span>
+                <span class="emoji" onclick="addEmoji('😎')">😎</span>
+            </div>
+            <button id="send-button" onclick="sendMessage()">發送</button>
+        </div>
+    </div>
+
+    <!-- 訂閱 Modal -->
+    <div class="modal" id="subscribe-modal">
+        <div class="modal-content">
+            <h3>訂閱成功！</h3>
+            <button class="confirm-btn" onclick="closeModal('subscribe-modal')">確定</button>
+        </div>
+    </div>
+
+    <!-- 送禮 Modal -->
+    <div class="gift-modal" id="gift-modal">
+        <div class="gift-modal-content">
+            <h3>選擇禮物送給實活主</h3>
+            <div>
+                <div class="gift-item">
+                    <img src="https://via.placeholder.com/60" class="gift-image" alt="禮物1">
+                    <p>禮物1</p>
+                </div>
+                <div class="gift-item">
+                    <img src="https://via.placeholder.com/60" class="gift-image" alt="禮物2">
+                    <p>禮物2</p>
+                </div>
+                <div class="gift-item">
+                    <img src="https://via.placeholder.com/60" class="gift-image" alt="禮物3">
+                    <p>禮物3</p>
+                </div>
+            </div>
+            <button class="confirm-btn" onclick="closeModal('gift-modal')">確認送出</button>
+            <button class="cancel-btn" onclick="closeModal('gift-modal')">取消</button>
+        </div>
+    </div>
+
+    <!-- 追隨 Modal -->
+    <div class="follow-modal" id="follow-modal">
+        <div class="follow-modal-content">
+            <h3>已追隨實活主 1</h3>
+            <button class="confirm-btn" onclick="closeModal('follow-modal')">確定</button>
+        </div>
+    </div>
+
+    <script src="viewer.js"></script>
+</body>
 </html>
+
