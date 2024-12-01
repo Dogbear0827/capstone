@@ -218,7 +218,7 @@
         </div>
 
         <!-- Video 3 -->
-        <div class="video-card" onclick="window.location.href='../watch.html';">
+        <div class="video-card" onclick="window.location.href='watch.html';">
             <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+3');"></div>
             <div class="video-info">
                 <div class="video-title">Video Title 3</div>
@@ -227,7 +227,7 @@
         </div>
 
         <!-- Video 4 -->
-        <div class="video-card" onclick="window.location.href='../watch.html';">
+        <div class="video-card" onclick="window.location.href='watch.html';">
             <div class="video-thumbnail" style="background-image: url('https://via.placeholder.com/400x150.png?text=Video+4');"></div>
             <div class="video-info">
                 <div class="video-title">Video Title 4</div>
@@ -239,16 +239,24 @@
 
 <!-- Streamer Mode Button -->
 <div class="streamer-mode-button" onclick="toggleStreamerMode()">Streamer Mode</div>
-
-<script>
-    function logout() {
-        alert('Logged out!');
-    }
-  
+<button class="logout-button" onclick="logoutUser()">Logout</button>
+<script>  
     function toggleStreamerMode() {
         alert('Streamer Mode Activated!');
         window.location.href = '../streamer.html'; // 跳轉到指定頁面// Add your Streamer Mode logic here
     }
+    document.addEventListener('DOMContentLoaded', function () {
+        function logoutUser() {
+            console.log('Logout function called'); // 用於檢查函數是否被正確調用
+            alert('Logged out!');
+            // 跳轉到登錄頁面，或執行其他登出邏輯
+            window.location.href = 'first.html';
+        }
+        document.querySelector('.logout-button').addEventListener('click', logoutUser);
+        
+    }
+  
+    );
 </script>
 
 </body>
