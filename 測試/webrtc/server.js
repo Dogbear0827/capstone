@@ -1,11 +1,70 @@
-const WebSocket = require('ws');
+// 引入必要的模組
+import { readFile, readFileSync } from 'fs'; // 檔案處理模組
+import { extname } from 'path'; // 路徑處理模組
+import { createServer } from 'https'; // HTTPS 伺服器模組
+import WebSocket, { WebSocketServer } from 'ws'; // WebSocket 模組
 
-// 建立 WebSocket 伺服器，監聽 8080 端口
-const wss = new WebSocket.Server({ port: 8080 });
+// 設定 HTTPS 伺服器的端口
+const HTTPS_PORT = 8080;
 
 // 用來儲存用戶的 WebSocket 連接
 let users = {};  // 儲存用戶名稱與對應的 WebSocket 連接
 let allUsers = new Set();  // 儲存所有在線的用戶名稱（包括主播與觀眾）
+
+// 處理 HTTP 請求並回傳相應的靜態文件
+function handleRequest(request, response) {
+	// 輸出收到的請求 URL
+	console.log('request received: ' + request.url);
+
+	// 根據 URL 選擇文件路徑
+	let filePath = request.url === '/' ? 'index.html' : `client${request.url}`; //請更改這裡的.html 預設顯示網頁為 index.html
+	const extName = extname(filePath); // 獲取文件的副檔名
+	let contentType = 'text/html'; // 預設內容類型為 HTML
+
+	// 根據副檔名決定對應的內容類型
+	switch (extName) {
+		case '.js':
+			contentType = 'application/javascript';
+			break;
+		case '.css':
+			contentType = 'text/css';
+			break;
+	}
+
+	// 讀取對應的靜態文件並回傳
+	readFile(filePath, (error, content) => {
+		if (error) {
+			if (error.code === 'ENOENT') {
+				// 檔案未找到
+				response.writeHead(404, { 'Content-Type': 'text/html' });
+				response.end('<h1>404 Not Found</h1>', 'utf-8');
+			} else {
+				// 伺服器錯誤
+				response.writeHead(500);
+				response.end(`Server Error: ${error.code}`);
+			}
+		} else {
+			// 成功讀取檔案並回傳
+			response.writeHead(200, { 'Content-Type': contentType });
+			response.end(content, 'utf-8');
+		}
+	});
+}
+
+// 創建 HTTPS 伺服器並啟動
+const httpsServer = createServer(
+	{
+		key: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/privkey.pem'), // SSL 私鑰
+		cert: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/cert.pem'), // SSL 證書
+	},
+	handleRequest // 處理 HTTP 請求的回調函式
+);
+httpsServer.listen(HTTPS_PORT, '0.0.0.0'); // 在所有網絡介面上監聽 HTTPS 端口
+
+// ----------------------------------------------------------------------------------------
+
+// 創建 WebSocket 伺服器，並與 HTTPS 伺服器一起運行
+const wss = new WebSocketServer({ server: httpsServer });
 
 // 當有用戶連接時，處理來自該用戶的訊息
 wss.on('connection', (ws) => {
@@ -128,4 +187,4 @@ function notifyUsersChange(newUser) {
 }
 
 // 伺服器啟動後，輸出提示訊息
-console.log('Server running. Visit https://localhost:8080');
+console.log(`Server running. Visit https://localhost:${HTTPS_PORT}`);
