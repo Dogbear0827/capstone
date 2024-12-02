@@ -1,4 +1,5 @@
 <?php
+// sudo apt-get install libapache2-mod-php8.3
 // 偵錯用
 //ini_set('display_errors', 1);
 //error_reporting(E_ALL);
@@ -6,21 +7,21 @@
 // 連接到資料庫
 $servername = "localhost";  // 如果Apache與Mysql裝在一起，則填入localhost
 $username = "root"; // 根據你的設定更改這裡
-$password = "newpassword"; // 根據你的設定更改這裡
-$dbname = ""; // 你的資料庫名稱
+$password = "00000000"; // 根據你的設定更改這裡
+$dbname = "account"; // 你的資料庫名稱
 
 // 創建連接
-// 記得安裝php-mysqli
-// sudo apt install php-mysqli
 $conn = new mysqli($servername, $username, $password, $dbname);
+
+// 設定 Content-Type 為 JSON 以便於前端處理返回的結果
+header('Content-Type: application/json');
 
 // 檢查連接
 if ($conn->connect_error) {
     die("連接失敗: " . $conn->connect_error);
 }
 
-// 設定 Content-Type 為 JSON 以便於前端處理返回的結果
-header('Content-Type: application/json');
+$conn->set_charset("utf8");
 
 // 如果是 POST 請求
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
