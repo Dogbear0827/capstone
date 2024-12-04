@@ -9,7 +9,7 @@ document.getElementById('shareMediaBtn').addEventListener('click', shareMedia);
 document.getElementById('shareScreenBtn').addEventListener('click', shareScreen);
 document.getElementById('stopSharingBtn').addEventListener('click', stopSharing);
 
-// WebRTC ICE 伺服器配置，用於對等連線時發現對方
+//  WebRTC ICE 伺服器配置，用於對等連線時發現對方
 const peerConnectionConfig = {
     iceServers: [
         { urls: 'stun:stun.stunprotocol.org:3478' },
