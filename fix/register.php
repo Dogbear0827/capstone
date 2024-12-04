@@ -1,5 +1,4 @@
 <?php
-// sudo apt-get install libapache2-mod-php8.3
 // 偵錯用
 //ini_set('display_errors', 1);
 //error_reporting(E_ALL);
@@ -7,21 +6,21 @@
 // 連接到資料庫
 $servername = "localhost";  // 如果Apache與Mysql裝在一起，則填入localhost
 $username = "root"; // 根據你的設定更改這裡
-$password = "00000000"; // 根據你的設定更改這裡
-$dbname = "account"; // 你的資料庫名稱
+$password = "00000000"; // 根據你的設定更改這裡，已經改成目前VM的樣子
+$dbname = "account"; // 你的資料庫名稱，已經改成目前VM的樣子
 
 // 創建連接
+// 記得安裝php-mysqli
+// sudo apt install php-mysqli
 $conn = new mysqli($servername, $username, $password, $dbname);
-
-// 設定 Content-Type 為 JSON 以便於前端處理返回的結果
-header('Content-Type: application/json');
 
 // 檢查連接
 if ($conn->connect_error) {
     die("連接失敗: " . $conn->connect_error);
 }
 
-$conn->set_charset("utf8");
+// 設定 Content-Type 為 JSON 以便於前端處理返回的結果
+header('Content-Type: application/json');
 
 // 如果是 POST 請求
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
@@ -58,6 +57,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     // 防止 SQL 注入，使用預處理語句
     $stmt = $conn->prepare("SELECT * FROM users WHERE username=? OR email=?");
+    if (!$stmt) {
+        echo json_encode(['status' => 'error', 'messages' => ['資料庫錯誤：' . $conn->error]]);
+        exit();
+    }
+
     $stmt->bind_param("ss", $user_username, $user_email); // 這裡是參數綁定
     $stmt->execute();
     $result = $stmt->get_result();
@@ -71,6 +75,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
         // 插入新使用者資料
         $insert_stmt = $conn->prepare("INSERT INTO users (username, email, userpassword) VALUES (?, ?, ?)");
+        if (!$insert_stmt) {
+            echo json_encode(['status' => 'error', 'messages' => ['資料庫錯誤：' . $conn->error]]);
+            exit();
+        }
+        
         $insert_stmt->bind_param("sss", $user_username, $user_email, $hashed_password); // 這裡是參數綁定
 
         if ($insert_stmt->execute()) {
@@ -80,11 +89,13 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // 註冊失敗
             echo json_encode(['status' => 'error', 'messages' => ['註冊失敗: ' . $conn->error]]);
         }
+
+        // 關閉預處理語句
+        $insert_stmt->close();
     }
 
     // 關閉預處理語句
     $stmt->close();
-    $insert_stmt->close();
 }
 
 $conn->close();
