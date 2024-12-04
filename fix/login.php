@@ -6,8 +6,8 @@
 // 連接到資料庫
 $servername = "localhost";
 $username = "root"; // 根據你的設定更改這裡
-$password = "newpassword"; // 根據你的設定更改這裡
-$dbname = "user_accounts"; // 你的資料庫名稱
+$password = "00000000"; // 根據你的設定更改這裡，已經改成VM目前的樣子
+$dbname = "account"; // 你的資料庫名稱，已經改成VM目前的樣子
 
 // 創建連接
 $conn = new mysqli($servername, $username, $password, $dbname);
@@ -58,8 +58,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             // 登入成功
             session_start();
             $_SESSION['username'] = $user['username'];
+
+            // 返回成功訊息
             echo json_encode(['status' => 'success', 'message' => '登入成功！']);
-           header("Location: streaming_page.php"); // Redirect to the main page
+            
             exit();
         } else {
             // 密碼錯誤
