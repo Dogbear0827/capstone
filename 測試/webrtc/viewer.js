@@ -26,7 +26,7 @@ const remoteVideo = document.getElementById('remoteVideo');  // 顯示遠端視�
 const remoteAudio = document.getElementById('remoteAudio');  // 顯示遠端音訊
 const showRemoteUsername = document.getElementById('showRemoteUsername');  // 顯示主播名稱
 
-// 可選的；用戶登錄
+//  可選的；用戶登錄
 /*function login(username) {
     sendToServer({
         type: 'login',  // 訊息類型
