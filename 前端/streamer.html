@@ -143,18 +143,10 @@
         const chatInput = document.getElementById('chat-input');
         const sendButton = document.getElementById('send-button');
 
-        // 按鈕點擊事件不再執行任何功能
-        screenShareButton.addEventListener('click', () => {
-            console.log("分享螢幕按鈕被點擊");
-        });
-
-        cameraShareButton.addEventListener('click', () => {
-            console.log("分享鏡頭按鈕被點擊");
-        });
-
-        stopButton.addEventListener('click', () => {
-            console.log("停止分享按鈕被點擊");
-        });
+        // 設定按鈕點擊事件，並且呼叫 streamer.js 內的對應方法
+        screenShareButton.addEventListener('click', shareScreen);
+        cameraShareButton.addEventListener('click', shareMedia);
+        stopButton.addEventListener('click', stopSharing);
 
         // 發送聊天室訊息
         sendButton.addEventListener('click', sendMessage);
@@ -176,9 +168,28 @@
             messagesDiv.appendChild(messageElem);
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
         }
+
+        // 引入 streamer.js 進行視訊和螢幕分享處理
+        function shareScreen() {
+            if (typeof shareScreen === 'function') {
+                shareScreen();
+            }
+        }
+
+        function shareMedia() {
+            if (typeof shareMedia === 'function') {
+                shareMedia();
+            }
+        }
+
+        function stopSharing() {
+            if (typeof stopSharing === 'function') {
+                stopSharing();
+            }
+        }
     </script>
 
-  <!-- 引入 WebRTC 相關的 JS 檔案 -->
+  <!--  引入 WebRTC 相關的 JS 檔案 -->
     <script src="streamer.js"></script>
 
 </body>
