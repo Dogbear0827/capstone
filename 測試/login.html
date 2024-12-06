@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登錄頁面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f2f2f2;
+        }
+
+        .login-container {
+            width: 350px;
+            padding: 30px;
+            background-color: #ffffff;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .login-container h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .login-container input[type="text"],
+        .login-container input[type="password"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .login-container .button {
+            width: 100%;
+            padding: 12px;
+            background-color: #4CAF50;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-container .button:hover {
+            background-color: #45a049;
+        }
+
+        .login-container .back-button {
+            width: 100%;
+            padding: 10px;
+            background-color: #ccc;
+            border: none;
+            border-radius: 4px;
+            color: #333;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        .login-container .back-button:hover {
+            background-color: #bbb;
+        }
+
+        .error-message {
+            color: red;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>登錄</h2>
+        <form id="login-form" action="choose.html" method="post">
+            <input type="text" id="username" name="username" placeholder="使用者名稱" required>
+            <input type="password" id="password" name="password" placeholder="密碼" required>
+            <!-- 兩個按鈕：觀看者 和 直播主 -->
+            <button type="button" class="button" id="viewer-btn">觀看者</button>
+            <button type="button" class="button" id="streamer-btn">直播主</button>
+            <button type="button" class="back-button" onclick="window.location.href='first.html'">返回</button>
+            <p id="error-message" class="error-message"></p>
+        </form>
+        <div class="links">
+            <a href="register.html" target="_self">註冊</a> | 
+            <a href="forgot-password">忘記密碼？</a>
+        </div>
+    </div>
+    
+
+    <script>
+        // 驗證表單
+        function validateForm() {
+            var errorMessage = document.getElementById('error-message');
+            // 驗證使用者名稱是否填寫
+            var username = document.getElementById('username').value;
+            if (username.trim() === "") {
+                errorMessage.textContent = '請輸入使用者名稱。';
+                return false;
+            }
+            // 驗證密碼是否填寫
+            var password = document.getElementById('password').value;
+            if (password.trim() === "") {
+                errorMessage.textContent = '請輸入密碼。';
+                return false;
+            }
+            errorMessage.textContent = '';
+            return true;
+        }
+
+        // 監聽按鈕點擊，根據不同選項跳轉
+        document.getElementById('viewer-btn').addEventListener('click', function() {
+            if (validateForm()) {
+                window.location.href = "viewer.html"; // 觀看者選項，跳轉到 viewer.html
+            }
+        });
+
+        document.getElementById('streamer-btn').addEventListener('click', function() {
+            if (validateForm()) {
+                window.location.href = "streamer.html"; // 直播主選項，跳轉到 streamer.html
+            }
+        });
+
+        // 登錄表單提交
+        document.getElementById('login-form').addEventListener('submit', function (e) {
+            e.preventDefault(); // 防止表單默認提交
+
+            // 執行表單驗證
+            if (!validateForm()) {
+                return; // 如果驗證失敗，停止提交
+            }
+
+            // 表單資料
+            var formData = new FormData(this);
+
+            // 發送 AJAX 請求
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', 'login.php', true);
+            xhr.onload = function () {
+                if (xhr.status === 200) {
+                    // 取得返回的結果
+                    var response = JSON.parse(xhr.responseText);
+                    if (response.status === "success") {
+                        alert("登入成功！");
+                        // Optional:登入成功後導向到個人檔案或主頁
+                        // window.location.href = "index.html";
+                    } else {
+                        document.getElementById('error-message').textContent = response.messages.join(", ");
+                    }
+                } else {
+                    document.getElementById('error-message').textContent = "發生錯誤，請稍後再試。";
+                }
+            };
+            xhr.send(formData); // 發送表單資料
+        });
+    </script>
+</body>
+</html>
