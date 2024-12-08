@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選擇角色</title>
+    <style>
+        body {
+            background-color: #f8eeee;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
+        .choose-container {
+            background-color: #fff;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
+        .choose-container h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        .code-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+        .button {
+            display: block;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .streamer-btn {
+            background-color: #6fe4f8;
+        }
+        .streamer-btn:hover {
+            background-color: #51c6d7;
+        }
+        .viewer-btn {
+            background-color: #28a745;
+        }
+        .viewer-btn:hover {
+            background-color: #218838;
+        }
+        .back-button {
+            background-color: #dc3545;
+        }
+        .back-button:hover {
+            background-color: #c82333;
+        }
+        .button:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="choose-container">
+        <h2>選擇您的角色</h2>
+        <p>歡迎，<?php echo htmlspecialchars($username); ?>！</p> <!-- 顯示登入的用戶名稱 -->
+        <!-- 輸入框 -->
+        <input type="text" id="streamer-code" class="code-input" placeholder="請輸入直播主代碼">
+        <!-- 按鈕 -->
+        <button class="button streamer-btn" id="streamer-btn" onclick="window.location.href='webrtc/streamer.html'">直播主</button>
+        <button class="button viewer-btn" id="viewer-btn">觀看者</button>
+        <button type="button" class="button back-button" onclick="window.location.href='login.html'">返回</button>
+    </div>
+
+    <script>
+        // 直播主按鈕點擊事件，暫時棄用
+        /*document.getElementById('streamer-btn').addEventListener('click', function() {
+            const code = document.getElementById('streamer-code').value.trim(); // 取得輸入的代碼
+            if (code) {
+                // 如果輸入有代碼，帶著代碼進行跳轉
+                window.location.href = `webrtc/streamer.html?code=${encodeURIComponent(code)}`;
+            } else {
+                alert("請輸入直播主代碼！");
+            }
+        });*/
+
+        // 觀看者按鈕點擊事件
+        document.getElementById('viewer-btn').addEventListener('click', function() {
+            const code = document.getElementById('streamer-code').value.trim(); // 取得輸入的代碼
+            if (code) {
+                // 如果輸入有代碼，帶著代碼進行跳轉
+                window.location.href = `webrtc/viewer.html?code=${encodeURIComponent(code)}`;
+            } else {
+                alert("請輸入直播主代碼！");
+            }
+        });
+    </script>
+</body>
+</html>
