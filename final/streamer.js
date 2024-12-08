@@ -6,9 +6,9 @@ let localStream; // 本地媒體流
 
 // 取得網頁上的元素
 const liveVideo = document.getElementById('liveVideo');
-//const screenShareButton = document.getElementById('screenShareButton');
-//const cameraShareButton = document.getElementById('cameraShareButton');
-//const stopButton = document.getElementById('stopButton');
+const screenShareButton = document.getElementById('screenShareButton');
+const cameraShareButton = document.getElementById('cameraShareButton');
+const stopButton = document.getElementById('stopButton');
 
 // 請求從後端檢查登入狀態並取得用戶名稱
 fetch('check-login.php')
@@ -100,9 +100,9 @@ fetch('check-login.php')
                     };
 
                     // 設定按鈕點擊事件
-                   // screenShareButton.addEventListener('click', shareScreen);
-                  //  cameraShareButton.addEventListener('click', shareMedia);
-                 //   stopButton.addEventListener('click', stopSharing);
+                    screenShareButton.addEventListener('click', shareScreen);
+                    cameraShareButton.addEventListener('click', shareMedia);
+                    stopButton.addEventListener('click', stopSharing);
 
                 } catch (err) {
                     console.error("Error accessing media devices: ", err);
