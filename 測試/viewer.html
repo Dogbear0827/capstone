@@ -278,129 +278,104 @@
     <div id="subscriptionModal" class="modal">
         <div class="modal-content">
             <h2>確定要花美金7777$訂閱嗎？</h2>
-            <button class="confirm-btn" onclick="subscribe()">確認</button>
-            <button class="cancel-btn" onclick="closeModal('subscriptionModal')">取消</button>
+            <button class="confirm-btn" onclick="confirmSubscription()">確定</button>
+            <button class="cancel-btn" onclick="closeSubscriptionModal()">取消</button>
         </div>
     </div>
 
     <!-- 送禮 Modal -->
     <div id="giftModal" class="gift-modal">
         <div class="gift-modal-content">
-            <h2>選擇禮物</h2>
-            <div class="gift-item" onclick="sendGift('玫瑰')">
-                <img class="gift-image" src="https://img.icons8.com/ios-filled/50/000000/rose.png" alt="玫瑰">
-                <p>玫瑰</p>
+            <h2>選擇禮物送給主播</h2>
+            <div class="gift-item" onclick="sendGift('花')">
+                <img src="https://img.icons8.com/ios-filled/50/000000/flower.png" alt="flower" class="gift-image">
+                <p>花</p>
             </div>
-            <div class="gift-item" onclick="sendGift('禮物盒')">
-                <img class="gift-image" src="https://img.icons8.com/ios-filled/50/000000/gift.png" alt="禮物盒">
-                <p>禮物盒</p>
+            <div class="gift-item" onclick="sendGift('心')">
+                <img src="https://img.icons8.com/ios-filled/50/000000/heart.png" alt="heart" class="gift-image">
+                <p>心</p>
             </div>
-            <div class="gift-item" onclick="sendGift('鑽石')">
-                <img class="gift-image" src="https://img.icons8.com/ios-filled/50/000000/diamond.png" alt="鑽石">
-                <p>鑽石</p>
+            <div class="gift-item" onclick="sendGift('愛心')">
+                <img src="https://img.icons8.com/ios-filled/50/000000/love.png" alt="love" class="gift-image">
+                <p>愛心</p>
             </div>
-            <button class="cancel-btn" onclick="closeModal('giftModal')">取消</button>
+            <button class="confirm-btn" onclick="closeGiftModal()">確認</button>
+            <button class="cancel-btn" onclick="closeGiftModal()">取消</button>
         </div>
     </div>
 
     <!-- 追隨 Modal -->
     <div id="followModal" class="follow-modal">
         <div class="follow-modal-content">
-            <h2 id="followModalMessage"></h2>
-            <button class="confirm-btn" onclick="closeFollowModal()">確認</button>
+            <h2>你已經追隨了實活主 1！</h2>
+            <button class="confirm-btn" onclick="closeFollowModal()">關閉</button>
         </div>
     </div>
 
     <script>
-        // 資料與函數部分
-        let followedStreamers = ['實活主 1', '實活主 2', '實活主 3'];
-        let isFollowed = false;
+        let followedStreamers = [];
 
-        // 動態生成追隨的實活主
-        followedStreamers.forEach(function(streamer) {
-            let li = document.createElement('li');
-            li.classList.add('followed-streamer');
-            li.textContent = streamer;
-            document.getElementById('followed-list').appendChild(li);
-        });
-
-        // 顯示訂閱Modal
-        function showSubscriptionModal() {
-            document.getElementById('subscriptionModal').style.display = 'flex';
-        }
-
-        // 關閉Modal
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-
-        // 訂閱功能
-        function subscribe() {
-            alert('已訂閱！');
-            closeModal('subscriptionModal');
-        }
-
-        // 顯示送禮Modal
-        function showGiftModal() {
-            document.getElementById('giftModal').style.display = 'flex';
-        }
-
-        // 送禮功能
-        function sendGift(gift) {
-            alert('已送出' + gift);
-            closeModal('giftModal');
-        }
-
-        // 追隨與取消追隨
         function toggleFollow(streamer) {
-            if (isFollowed) {
-                document.getElementById('followModalMessage').textContent = '已取消追隨 ' + streamer;
-                isFollowed = false;
+            if (followedStreamers.includes(streamer)) {
+                followedStreamers = followedStreamers.filter(item => item !== streamer);
+                alert("取消追隨 " + streamer);
+                document.getElementById("follow-btn").textContent = "追隨";
             } else {
-                document.getElementById('followModalMessage').textContent = '已追隨 ' + streamer;
-                isFollowed = true;
-            }
-            document.getElementById('followModal').style.display = 'flex';
-        }
-
-        // 關閉追隨 Modal
-        function closeFollowModal() {
-            document.getElementById('followModal').style.display = 'none';
-        }
-
-        // 發送訊息到聊天室
-        function sendMessage() {
-            let message = document.getElementById('chat-input').value;
-            if (message) {
-                let messageElement = document.createElement('p');
-                messageElement.textContent = message;
-                document.getElementById('messages').appendChild(messageElement);
-                document.getElementById('chat-input').value = '';
+                followedStreamers.push(streamer);
+                alert("追隨 " + streamer);
+                document.getElementById("follow-btn").textContent = "已追隨";
             }
         }
 
-        // 顯示或隱藏表情選單
+        function showSubscriptionModal() {
+            document.getElementById("subscriptionModal").style.display = "flex";
+        }
+
+        function confirmSubscription() {
+            alert("訂閱成功！");
+            document.getElementById("subscriptionModal").style.display = "none";
+        }
+
+        function closeSubscriptionModal() {
+            document.getElementById("subscriptionModal").style.display = "none";
+        }
+
+        function showGiftModal() {
+            document.getElementById("giftModal").style.display = "flex";
+        }
+
+        function sendGift(gift) {
+            alert("您送出 " + gift + "！") ;
+            document.getElementById("giftModal").style.display = "none";
+        }
+
+        function closeGiftModal() {
+            document.getElementById("giftModal").style.display = "none";
+        }
+
         function toggleEmojiPicker() {
-            let emojiPicker = document.getElementById('emoji-picker');
-            emojiPicker.style.display = emojiPicker.style.display === 'block' ? 'none' : 'block';
+            const emojiPicker = document.getElementById("emoji-picker");
+            emojiPicker.style.display = emojiPicker.style.display === "block" ? "none" : "block";
         }
 
-        // 插入表情符號
         function addEmoji(emoji) {
-            let input = document.getElementById('chat-input');
-            input.value += emoji;
+            document.getElementById("chat-input").value += emoji;
             toggleEmojiPicker();
         }
 
-        // WebRTC部分的初始化
-        // 這部分需要與服務端的 WebRTC 功能結合
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
-            .then(function (stream) {
-                document.getElementById('viewer').srcObject = stream;
-            })
-            .catch(function (error) {
-                console.error('WebRTC 連接失敗：', error);
-            });
+        function sendMessage() {
+            const messageInput = document.getElementById("chat-input");
+            const message = messageInput.value.trim();
+            if (message) {
+                const messageContainer = document.getElementById("messages");
+                const newMessage = document.createElement("div");
+                newMessage.textContent = message;
+                messageContainer.appendChild(newMessage);
+                messageInput.value = "";
+                messageContainer.scrollTop = messageContainer.scrollHeight;
+            }
+        }
     </script>
+    <script src="webrtc.js"></script>
 </body>
 </html>
