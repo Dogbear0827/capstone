@@ -135,7 +135,7 @@
     </div>
 
     <script>
-        // 按鈕和聊天室元素
+        // 這裡已經不需要處理任何視頻流，只保留按鈕顯示
         const screenShareButton = document.getElementById('screenShareButton');
         const cameraShareButton = document.getElementById('cameraShareButton');
         const stopButton = document.getElementById('stopButton');
@@ -159,27 +159,6 @@
             if (message) {
                 addMessageToChat(`你: ${message}`);
                 chatInput.value = '';
-
-                // 發送留言到後端儲存
-                fetch('save_message.php', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                    },
-                    body: new URLSearchParams({
-                        username: '直播主', // 可改為動態使用者名稱
-                        message: message,
-                    }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (!data.success) {
-                        console.error('留言儲存失敗:', data.message);
-                    }
-                })
-                .catch(error => {
-                    console.error('伺服器錯誤:', error);
-                });
             }
         }
 
@@ -210,7 +189,7 @@
         }
     </script>
 
-    <!--  引入 WebRTC 相關的 JS 檔案 -->
+  <!--  引入 WebRTC 相關的 JS 檔案 -->
     <script src="webrtc.js"></script>
 
 </body>
