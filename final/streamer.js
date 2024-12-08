@@ -100,9 +100,9 @@ fetch('check-login.php')
                     };
 
                     // 設定按鈕點擊事件
-                    screenShareButton.addEventListener('click', shareScreen);
-                    cameraShareButton.addEventListener('click', shareMedia);
-                    stopButton.addEventListener('click', stopSharing);
+                  //  screenShareButton.addEventListener('click', shareScreen);
+                  //  cameraShareButton.addEventListener('click', shareMedia);
+                  //  stopButton.addEventListener('click', stopSharing);
 
                 } catch (err) {
                     console.error("Error accessing media devices: ", err);
