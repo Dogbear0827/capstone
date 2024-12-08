@@ -87,20 +87,23 @@
     <script>
         // 檢查用戶登入狀態
         function checkLogin() {
-            fetch('check-login.php')
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        // 顯示用戶名稱
-                        document.getElementById('username-placeholder').textContent = `歡迎，${data.username}！`;
-                    }
-                })
-                .catch(error => {
-                    console.error('檢查登入狀態時出錯:', error);
-                    // 出錯的話，可以選擇跳轉到登入頁面
-                    window.location.href = 'login.html';
-                });
-        }
+		fetch('check-login.php')
+        .then(response => response.json())  // 解析 JSON
+        .then(data => {
+            if (data.status === "success") {  // 根據回應的 status 值判斷是否登入
+                // 顯示用戶名稱
+                document.getElementById('username-placeholder').textContent = `歡迎，${data.username}！`;
+            } else {
+                // 如果未登入，跳轉到登入頁面
+                window.location.href = 'login.html';
+            }
+        })
+        .catch(error => {
+            console.error('檢查登入狀態時出錯:', error);
+            // 出錯的話，可以選擇跳轉到登入頁面
+            window.location.href = 'login.html';
+        });
+		}
 
         // 觀看者按鈕點擊事件
         document.getElementById('viewer-btn').addEventListener('click', function() {
