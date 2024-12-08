@@ -107,7 +107,7 @@
 
         // 觀看者按鈕點擊事件
         document.getElementById('viewer-btn').addEventListener('click', function() {
-            const code = document.getElementById('streamer-code').value.trim(); // 取得輸入的代碼
+            const roomcode = document.getElementById('streamer-code').value.trim(); // 取得輸入的代碼
             if (code) {
                 // 如果輸入有代碼，帶著代碼進行跳轉
                 window.location.href = `webrtc/viewer.html?code=${encodeURIComponent(code)}`;
