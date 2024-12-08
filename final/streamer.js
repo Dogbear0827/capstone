@@ -1,4 +1,4 @@
-const socket = new WebSocket('wss://localhost:8080'); // 連接到 WebSocket 伺服器
+const socket = new WebSocket('wss://' + window.location.hostname + ':8080'); // 連接到 WebSocket 伺服器
 
 let name; // 用戶名稱
 let peerConnection; // WebRTC peer connection
