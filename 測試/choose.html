@@ -1,0 +1,24 @@
+ </style>
+</head>
+<body>
+    <div class="choose-container">
+        <h2>選擇您的角色</h2>
+        <!-- 這裡的連結改為相對路徑 -->
+        <button class="button" id="streamer-btn">直播主</button>
+        <button class="button" id="viewer-btn">觀看者</button>
+        <button type="button" class="back-button" onclick="window.location.href='login.html'">返回</button>
+    </div>
+
+    <script>
+        // 直播主按鈕點擊事件
+        document.getElementById('streamer-btn').addEventListener('click', function() {
+            window.location.href = "webrtc/streamer.html"; // 導向 webrtc 目錄下的 streamer.html
+        });
+
+        // 觀看者按鈕點擊事件
+        document.getElementById('viewer-btn').addEventListener('click', function() {
+            window.location.href = "webrtc/viewer.html"; // 導向 webrtc 目錄下的 viewer.html
+        });
+    </script>
+</body>
+</html>
