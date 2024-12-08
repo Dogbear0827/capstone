@@ -5,7 +5,7 @@ let peerConnection; // WebRTC peer connection
 let localStream; // 本地媒體流
 
 // 取得網頁上的元素
-//const liveVideo = document.getElementById('liveVideo');
+const liveVideo = document.getElementById('liveVideo');
 //const screenShareButton = document.getElementById('screenShareButton');
 //const cameraShareButton = document.getElementById('cameraShareButton');
 //const stopButton = document.getElementById('stopButton');
