@@ -75,7 +75,7 @@
 <body>
     <div class="choose-container">
         <h2>選擇您的角色</h2>
-        <p>歡迎，<?php echo htmlspecialchars($username); ?>！</p> <!-- 顯示登入的用戶名稱 -->
+        <p id="username-placeholder">正在檢查登入狀態...</p> <!-- 用來顯示用戶名稱 -->
         <!-- 輸入框 -->
         <input type="text" id="streamer-code" class="code-input" placeholder="請輸入直播主代碼">
         <!-- 按鈕 -->
@@ -85,16 +85,22 @@
     </div>
 
     <script>
-        // 直播主按鈕點擊事件，暫時棄用
-        /*document.getElementById('streamer-btn').addEventListener('click', function() {
-            const code = document.getElementById('streamer-code').value.trim(); // 取得輸入的代碼
-            if (code) {
-                // 如果輸入有代碼，帶著代碼進行跳轉
-                window.location.href = `webrtc/streamer.html?code=${encodeURIComponent(code)}`;
-            } else {
-                alert("請輸入直播主代碼！");
-            }
-        });*/
+        // 檢查用戶登入狀態
+        function checkLogin() {
+            fetch('check-login.php')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // 顯示用戶名稱
+                        document.getElementById('username-placeholder').textContent = `歡迎，${data.username}！`;
+                    }
+                })
+                .catch(error => {
+                    console.error('檢查登入狀態時出錯:', error);
+                    // 出錯的話，可以選擇跳轉到登入頁面
+                    window.location.href = 'login.html';
+                });
+        }
 
         // 觀看者按鈕點擊事件
         document.getElementById('viewer-btn').addEventListener('click', function() {
@@ -106,6 +112,9 @@
                 alert("請輸入直播主代碼！");
             }
         });
+
+        // 頁面載入時檢查登入狀態
+        window.onload = checkLogin;
     </script>
 </body>
 </html>
