@@ -167,10 +167,12 @@ async function updateLocalStream(newStream) {
         });
     }
 
+    // 創建 offer 並發送
     try {
         const offer = await peerConnection.createOffer();
         await peerConnection.setLocalDescription(offer);
 
+        // 發送 offer 到 WebSocket 伺服器
         socket.send(JSON.stringify({
             type: 'offer',
             offer: offer,
@@ -190,6 +192,7 @@ async function handleOffer(offer, streamer, roomCode) {
     const answer = await peerConnection.createAnswer();
     await peerConnection.setLocalDescription(answer);
 
+    // 回傳 answer 給觀眾
     socket.send(JSON.stringify({
         type: 'answer',
         answer: answer,
