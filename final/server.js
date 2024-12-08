@@ -1,240 +1,149 @@
-// 引入必要的模組
-import { readFile, readFileSync } from 'fs'; // 檔案處理模組
-import { extname } from 'path'; // 路徑處理模組
-import { createServer } from 'https'; // HTTPS 伺服器模組
-import WebSocket, { WebSocketServer } from 'ws'; // WebSocket 模組
+const socket = new WebSocket('wss://' + window.location.hostname + ':8080'); // 連接到 WebSocket 伺服器
 
-// 設定 HTTPS 伺服器的端口
-const HTTPS_PORT = 8080;
+let peerConnections = {}; // 儲存每個直播主的 PeerConnection
+let name; // 用戶名稱
+let roomCode; // 房間代碼，從 URL 獲取
 
-// 用來儲存用戶的 WebSocket 連接
-let users = {};  // 儲存用戶名稱與對應的 WebSocket 連接
-let allUsers = new Set();  // 儲存所有在線的用戶名稱（包括主播與觀眾）
-let streamerSockets = {}; // 儲存每個主播的 WebSocket 連接
-let roomStreamers = {};  // 儲存每個房間代碼對應的主播 WebSocket 連接
+// 從 URL 中解析出房間代碼
+const urlParams = new URLSearchParams(window.location.search);
+roomCode = urlParams.get('code');
 
-// 處理 HTTP 請求並回傳相應的靜態文件
-function handleRequest(request, response) {
-    console.log('request received: ' + request.url);
-
-    let filePath;
-    if (request.url === '/') {
-        filePath = '/etc/www/html/webrtc/streamer.html'; // 根路徑請求返回 streamer.html
-    } else if (request.url === '/viewer') {
-        filePath = '/etc/www/html/webrtc/viewer.html'; // 當請求 /viewer 時返回 viewer.html
-    } else {
-        filePath = `/etc/www/html/webrtc${request.url}`;
-    }
-
-    const extName = extname(filePath); 
-    let contentType = 'text/html'; 
-
-    switch (extName) {
-        case '.js':
-            contentType = 'application/javascript';
-            break;
-        case '.css':
-            contentType = 'text/css';
-            break;
-    }
-
-    readFile(filePath, (error, content) => {
-        if (error) {
-            if (error.code === 'ENOENT') {
-                response.writeHead(404, { 'Content-Type': 'text/html' });
-                response.end('<h1>404 Not Found</h1>', 'utf-8');
-            } else {
-                response.writeHead(500);
-                response.end(`Server Error: ${error.code}`);
-            }
-        } else {
-            response.writeHead(200, { 'Content-Type': contentType });
-            response.end(content, 'utf-8');
-        }
-    });
+if (!roomCode) {
+    alert("房間代碼無效或缺少");
+    // 可以考慮跳轉到其他頁面或顯示更多提示
+} else {
+    console.log(`觀眾房間代碼: ${roomCode}`);
 }
 
-// 創建 HTTPS 伺服器並啟動
-const httpsServer = createServer(
-    {
-        key: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/privkey.pem'),
-        cert: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/cert.pem'),
-    },
-    handleRequest
-);
-httpsServer.listen(HTTPS_PORT, '0.0.0.0');
-
-// 創建 WebSocket 伺服器，並與 HTTPS 伺服器一起運行
-const wss = new WebSocketServer({ server: httpsServer });
-
-// 當有用戶連接時，處理來自該用戶的訊息
-wss.on('connection', (ws) => {
-    ws.on('message', (message) => {
-        let data;
-
-        // 嘗試解析接收到的 JSON 格式的訊息
-        try {
-            data = JSON.parse(message);
-        } catch (e) {
-            console.log('Invalid JSON');
-            sendTo(ws, { type: 'error', message: 'Invalid message format' });
-            return;
-        }
-
-        console.log('received data:', data);
-
-        switch (data.type) {
-            case 'login': {
-                console.log('User login attempt:', data.name);
-
-                if (users[data.name]) {
-                    sendTo(ws, { type: 'login', success: false, message: 'Username already taken' });
-                    return;
-                }
-
-                users[data.name] = ws;
-                allUsers.add(data.name);
-                ws.name = data.name;
-
-                sendTo(ws, {
-                    type: 'login',
-                    success: true,
-                    allUsers: Array.from(allUsers),
-                });
-
-                notifyUsersChange(data.name);
-                break;
-            }
-
-            case 'share': {
-                if (ws.name) {
-                    console.log(`${ws.name} started streaming`);
-
-                    const roomCode = ws.name; // 使用主播名稱作為房間代碼
-                    roomStreamers[roomCode] = ws;
-
-                    // 通知所有觀眾
-                    for (const user in users) {
-                        if (user !== ws.name) {
-                            sendTo(users[user], {
-                                type: 'stream',
-                                streamer: ws.name,
-                                roomCode: roomCode,
-                            });
-                        }
-                    }
-                }
-                break;
-            }
-
-            case 'connect-to-streamer': {
-                const roomCode = data.roomCode;  
-                const streamerSocket = roomStreamers[roomCode];  
-
-                if (streamerSocket) {
-                    sendTo(streamerSocket, {
-                        type: 'viewer-wants-to-connect',
-                        viewer: ws.name
-                    });
-                    console.log(`${ws.name} 正在嘗試連接到 ${streamerSocket.name}`);
-                } else {
-                    sendTo(ws, {
-                        type: 'error',
-                        message: `找不到主播 ${roomCode}`
-                    });
-                }
-                break;
-            }
-
-            case 'offer': {
-                const roomCode = data.roomCode;
-                const streamerSocket = roomStreamers[roomCode];
-
-                if (streamerSocket) {
-                    sendTo(streamerSocket, {
-                        type: 'offer',
-                        offer: data.offer,
-                        streamer: ws.name,
-                    });
-                }
-                break;
-            }
-
-            case 'answer': {
-                const roomCode = data.roomCode;
-                const streamerSocket = roomStreamers[roomCode];
-
-                if (streamerSocket) {
-                    sendTo(streamerSocket, {
-                        type: 'answer',
-                        answer: data.answer,
-                        viewer: ws.name,
-                    });
-                }
-                break;
-            }
-
-            case 'candidate': {
-                const roomCode = data.roomCode;
-                const streamerSocket = roomStreamers[roomCode];
-
-                if (streamerSocket) {
-                    sendTo(streamerSocket, {
-                        type: 'candidate',
-                        candidate: data.candidate,
-                        streamer: ws.name,
-                    });
-                }
-                break;
-            }
-
-            default: {
-                sendTo(ws, { type: 'error', message: 'Command not found: ' + data.type });
-            }
-        }
-    });
-
-    ws.on('close', () => {
-        if (ws.name && users[ws.name]) {
-            delete users[ws.name];
-            allUsers.delete(ws.name);
-            delete streamerSockets[ws.name];
-
-            // 清除房間代碼對應的主播 WebSocket
-            for (const roomCode in roomStreamers) {
-                if (roomStreamers[roomCode] === ws) {
-                    delete roomStreamers[roomCode];
-                }
-            }
-
-            notifyUsersChange(ws.name);
-            console.log(`${ws.name} has disconnected`);
-        }
-    });
-});
-
-// 發送訊息給指定的 WebSocket 連接
-function sendTo(connection, message) {
+// 使用 async/await 處理登入邏輯
+async function fetchLoginData() {
     try {
-        connection.send(JSON.stringify(message));
-    } catch (error) {
-        console.error('Error sending message:', error);
-        connection.send(JSON.stringify({ type: 'error', message: 'Failed to send message' }));
-    }
-}
-
-// 通知所有用戶在線用戶列表的變更
-function notifyUsersChange(newUser) {
-    for (const user of allUsers) {
-        if (user !== newUser) {
-            sendTo(users[user], {
-                type: 'users',
-                users: Array.from(allUsers),
-                updatedUser: newUser,
-            });
+        const response = await fetch('check-login.php');
+        const data = await response.json();
+        if (data.status === "success") {
+            name = data.username; // 設置用戶名稱
+            console.log(`用戶名稱: ${name}`);
+            initWebSocket();
+        } else {
+            alert('未登入或無效用戶');
         }
+    } catch (error) {
+        console.error('Error fetching login data:', error);
     }
 }
 
-// 伺服器啟動後，輸出提示訊息
-console.log(`Server running. Visit https://localhost:${HTTPS_PORT}`);
+// 初始化 WebSocket 事件
+function initWebSocket() {
+    socket.onopen = () => {
+        console.log("Connected to WebSocket server");
+        socket.send(JSON.stringify({
+            type: 'login',
+            name: name,
+            roomCode: roomCode // 發送房間代碼
+        }));
+    };
+
+    socket.onmessage = handleWebSocketMessage;
+    socket.onclose = () => {
+        console.log("Disconnected from WebSocket server");
+        // 自動重連 WebSocket
+        setTimeout(() => {
+            console.log("Reconnecting to WebSocket...");
+            initWebSocket();
+        }, 3000); // 每 3 秒嘗試重連
+    };
+
+    // 初始化顯示所有直播主的視頻
+    window.onload = async () => {
+        // 當觀看者加載時，請求特定房間內的主播視頻流
+        socket.send(JSON.stringify({
+            type: 'connect-to-streamer', // 請求房間內的主播視訊流
+            roomCode: roomCode, // 發送房間代碼
+        }));
+    };
+}
+
+// 處理 WebSocket 訊息
+function handleWebSocketMessage(event) {
+    const message = JSON.parse(event.data);
+    console.log("Received message: ", message);
+
+    switch (message.type) {
+        case 'login':
+            if (message.success) {
+                console.log("Logged in successfully");
+            } else {
+                alert("Login failed: " + message.message);
+            }
+            break;
+
+        case 'offer':
+            handleOffer(message.offer, message.streamer);
+            break;
+
+        case 'candidate':
+            if (peerConnections[message.streamer]) {
+                peerConnections[message.streamer].addIceCandidate(new RTCIceCandidate(message.candidate));
+            }
+            break;
+
+        case 'answer':
+            if (peerConnections[message.streamer]) {
+                peerConnections[message.streamer].setRemoteDescription(new RTCSessionDescription(message.answer));
+            }
+            break;
+
+        default:
+            console.log("Unknown message type: ", message.type);
+            break;
+    }
+}
+
+// 處理來自直播主的 offer
+async function handleOffer(offer, streamer) {
+    const peerConnection = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+    });
+
+    peerConnection.onicecandidate = (event) => {
+        if (event.candidate) {
+            socket.send(JSON.stringify({
+                type: 'candidate',
+                candidate: event.candidate,
+                streamer: streamer,
+                roomCode: roomCode, // 發送房間代碼
+            }));
+        }
+    };
+
+    peerConnection.ontrack = (event) => {
+        const remoteStream = event.streams[0];
+
+        // 動態創建並顯示每個直播主的視訊
+        let videoContainer = document.getElementById('video-container');
+        let videoElement = document.createElement('video');
+        videoElement.id = `video-${streamer}`;
+        videoElement.autoplay = true;
+        videoElement.controls = true;
+        videoElement.srcObject = remoteStream;
+
+        videoContainer.appendChild(videoElement);
+    };
+
+    await peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    socket.send(JSON.stringify({
+        type: 'answer',
+        answer: answer,
+        streamer: streamer,
+        roomCode: roomCode, // 發送房間代碼
+    }));
+
+    // 儲存 PeerConnection
+    peerConnections[streamer] = peerConnection;
+}
+
+// 啟動主程序
+fetchLoginData();
