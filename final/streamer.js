@@ -14,7 +14,7 @@ const stopButton = document.getElementById('stopButton');
 fetch('check-login.php')
     .then(response => response.json())
     .then(data => {
-        if (data.success) {
+        if (data.status === "success") {
             name = data.username; // 設置用戶名稱
             console.log(`用戶名稱: ${name}`);
 
