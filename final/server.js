@@ -15,15 +15,20 @@ let roomStreamers = {};  // 儲存每個房間代碼對應的主播 WebSocket �
 
 // 處理 HTTP 請求並回傳相應的靜態文件
 function handleRequest(request, response) {
-    // 輸出收到的請求 URL
     console.log('request received: ' + request.url);
 
-    // 根據 URL 選擇文件路徑
-    let filePath = request.url === '/' ? 'index.html' : `client${request.url}`;
-    const extName = extname(filePath); // 獲取文件的副檔名
-    let contentType = 'text/html'; // 預設內容類型為 HTML
+    let filePath;
+    if (request.url === '/') {
+        filePath = '/etc/www/html/webrtc/streamer.html'; // 根路徑請求返回 streamer.html
+    } else if (request.url === '/viewer') {
+        filePath = '/etc/www/html/webrtc/viewer.html'; // 當請求 /viewer 時返回 viewer.html
+    } else {
+        filePath = `/etc/www/html/webrtc${request.url}`;
+    }
 
-    // 根據副檔名決定對應的內容類型
+    const extName = extname(filePath); 
+    let contentType = 'text/html'; 
+
     switch (extName) {
         case '.js':
             contentType = 'application/javascript';
@@ -33,20 +38,16 @@ function handleRequest(request, response) {
             break;
     }
 
-    // 讀取對應的靜態文件並回傳
     readFile(filePath, (error, content) => {
         if (error) {
             if (error.code === 'ENOENT') {
-                // 檔案未找到
                 response.writeHead(404, { 'Content-Type': 'text/html' });
                 response.end('<h1>404 Not Found</h1>', 'utf-8');
             } else {
-                // 伺服器錯誤
                 response.writeHead(500);
                 response.end(`Server Error: ${error.code}`);
             }
         } else {
-            // 成功讀取檔案並回傳
             response.writeHead(200, { 'Content-Type': contentType });
             response.end(content, 'utf-8');
         }
@@ -56,25 +57,22 @@ function handleRequest(request, response) {
 // 創建 HTTPS 伺服器並啟動
 const httpsServer = createServer(
     {
-        key: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/privkey.pem'), // SSL 私鑰
-        cert: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/cert.pem'), // SSL 證書
+        key: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/privkey.pem'),
+        cert: readFileSync('/etc/letsencrypt/live/stream-capstone.us.kg-0001/cert.pem'),
     },
-    handleRequest // 處理 HTTP 請求的回調函式
+    handleRequest
 );
-httpsServer.listen(HTTPS_PORT, '0.0.0.0'); // 在所有網絡介面上監聽 HTTPS 端口
-
-// ----------------------------------------------------------------------------------------
+httpsServer.listen(HTTPS_PORT, '0.0.0.0');
 
 // 創建 WebSocket 伺服器，並與 HTTPS 伺服器一起運行
 const wss = new WebSocketServer({ server: httpsServer });
 
 // 當有用戶連接時，處理來自該用戶的訊息
 wss.on('connection', (ws) => {
-    // 當用戶發送訊息時，處理收到的訊息
     ws.on('message', (message) => {
         let data;
 
-        // 嘗試解析接收到的 JSON 格式的訊息，若格式錯誤則捕獲異常並返回錯誤訊息
+        // 嘗試解析接收到的 JSON 格式的訊息
         try {
             data = JSON.parse(message);
         } catch (e) {
@@ -86,49 +84,42 @@ wss.on('connection', (ws) => {
         console.log('received data:', data);
 
         switch (data.type) {
-            // 當用戶嘗試登入時
             case 'login': {
                 console.log('User login attempt:', data.name);
 
-                // 如果用戶名稱已存在，返回登入失敗
                 if (users[data.name]) {
                     sendTo(ws, { type: 'login', success: false, message: 'Username already taken' });
                     return;
                 }
 
-                // 儲存用戶的 WebSocket 連接並標記為在線
                 users[data.name] = ws;
                 allUsers.add(data.name);
                 ws.name = data.name;
 
-                // 返回登入成功訊息及在線用戶列表
                 sendTo(ws, {
                     type: 'login',
                     success: true,
                     allUsers: Array.from(allUsers),
                 });
 
-                // 通知其他用戶有新用戶加入
                 notifyUsersChange(data.name);
                 break;
             }
 
-            // 當主播開始分享媒體時，通知所有觀眾
             case 'share': {
                 if (ws.name) {
                     console.log(`${ws.name} started streaming`);
 
-                    // 儲存主播與房間代碼的對應關係
-                    const roomCode = data.roomCode;
+                    const roomCode = ws.name; // 使用主播名稱作為房間代碼
                     roomStreamers[roomCode] = ws;
 
-                    // 將主播的訊息發送給所有觀眾
+                    // 通知所有觀眾
                     for (const user in users) {
                         if (user !== ws.name) {
                             sendTo(users[user], {
-                                type: 'stream',  // 訊息類型為「stream」，表示主播開始直播
-                                streamer: ws.name,  // 轉發主播的名稱
-                                roomCode: roomCode, // 傳送房間代碼給觀眾
+                                type: 'stream',
+                                streamer: ws.name,
+                                roomCode: roomCode,
                             });
                         }
                     }
@@ -136,13 +127,11 @@ wss.on('connection', (ws) => {
                 break;
             }
 
-            // 處理觀眾嘗試連接到主播的請求
             case 'connect-to-streamer': {
-                const roomCode = data.code;  // 獲取觀眾請求的房間代碼
-                const streamerSocket = roomStreamers[roomCode];  // 根據房間代碼查找對應的主播 WebSocket
+                const roomCode = data.roomCode;  
+                const streamerSocket = roomStreamers[roomCode];  
 
                 if (streamerSocket) {
-                    // 發送訊息通知主播有觀眾想要連接
                     sendTo(streamerSocket, {
                         type: 'viewer-wants-to-connect',
                         viewer: ws.name
@@ -157,7 +146,6 @@ wss.on('connection', (ws) => {
                 break;
             }
 
-            // 處理 offer，並轉發給觀眾
             case 'offer': {
                 const roomCode = data.roomCode;
                 const streamerSocket = roomStreamers[roomCode];
@@ -172,7 +160,6 @@ wss.on('connection', (ws) => {
                 break;
             }
 
-            // 處理 answer，並轉發給主播
             case 'answer': {
                 const roomCode = data.roomCode;
                 const streamerSocket = roomStreamers[roomCode];
@@ -187,7 +174,6 @@ wss.on('connection', (ws) => {
                 break;
             }
 
-            // ICE候選的處理
             case 'candidate': {
                 const roomCode = data.roomCode;
                 const streamerSocket = roomStreamers[roomCode];
@@ -208,22 +194,19 @@ wss.on('connection', (ws) => {
         }
     });
 
-    // 當 WebSocket 連線關閉時，進行清理操作
     ws.on('close', () => {
         if (ws.name && users[ws.name]) {
-            // 刪除用戶連接
             delete users[ws.name];
             allUsers.delete(ws.name);
             delete streamerSockets[ws.name];
 
-            // 針對每個房間代碼，清理對應的主播 WebSocket
+            // 清除房間代碼對應的主播 WebSocket
             for (const roomCode in roomStreamers) {
                 if (roomStreamers[roomCode] === ws) {
                     delete roomStreamers[roomCode];
                 }
             }
 
-            // 通知其他用戶更新在線用戶列表
             notifyUsersChange(ws.name);
             console.log(`${ws.name} has disconnected`);
         }
