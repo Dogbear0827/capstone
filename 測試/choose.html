@@ -1,50 +1,86 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>選擇角色</title>
     <style>
+        body {
+            background-color: #f8eeee;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+        }
         .choose-container {
+            background-color: #fff;
+            width: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            padding: 20px;
             text-align: center;
-            margin-top: 50px;
+        }
+        .choose-container h2 {
+            margin: 0 0 20px;
+            font-size: 24px;
+            color: #333;
+        }
+        .code-input {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            box-sizing: border-box;
         }
         .button {
             display: block;
-            margin: 10px auto;
-            padding: 10px 20px;
-            font-size: 16px;
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 10px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            border: none;
+            border-radius: 5px;
             cursor: pointer;
+            transition: background-color 0.3s, transform 0.1s;
+        }
+        .streamer-btn {
+            background-color: #6fe4f8;
+        }
+        .streamer-btn:hover {
+            background-color: #51c6d7;
+        }
+        .viewer-btn {
+            background-color: #28a745;
+        }
+        .viewer-btn:hover {
+            background-color: #218838;
         }
         .back-button {
-            margin-top: 20px;
+            background-color: #dc3545;
         }
-        .code-input {
-            display: block;
-            margin: 10px auto;
-            padding: 8px;
-            font-size: 14px;
-            width: 200px;
+        .back-button:hover {
+            background-color: #c82333;
         }
-        label {
-            display: block;
-            margin: 10px auto 5px;
-            font-size: 14px;
+        .button:active {
+            transform: scale(0.95);
         }
     </style>
 </head>
 <body>
     <div class="choose-container">
         <h2>選擇您的角色</h2>
-        
-        <!-- 直播主代碼輸入框 -->
-        <label for="streamer-code">直播主代碼</label>
+        <!-- 輸入框 -->
         <input type="text" id="streamer-code" class="code-input" placeholder="請輸入直播主代碼">
-        
         <!-- 按鈕 -->
-        <button class="button" id="streamer-btn">直播主</button>
-        <button class="button" id="viewer-btn">觀看者</button>
-        <button type="button" class="back-button" onclick="window.location.href='login.html'">返回</button>
+        <button class="button streamer-btn" id="streamer-btn">直播主</button>
+        <button class="button viewer-btn" id="viewer-btn">觀看者</button>
+        <button type="button" class="button back-button" onclick="window.location.href='login.html'">返回</button>
     </div>
 
     <script>
