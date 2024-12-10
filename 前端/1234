@@ -1,0 +1,212 @@
+/** @type {RTCPeerConnection} */
+let yourConn; // 儲存 WebRTC 連接的物件
+let candidateQueue = []; // 儲存 ICE 候選者，以防遠端連接尚未建立
+
+let localUser; // 本地使用者名稱
+let localStream; // 本地的媒體流（視頻或音頻）
+let connectedUser; // 連接的對方使用者
+
+// WebRTC ICE 伺服器配置
+const peerConnectionConfig = {
+	iceServers: [{ urls: 'stun:stun.stunprotocol.org:3478' }, { urls: 'stun:stun.l.google.com:19302' }],
+};
+
+// 與信令伺服器建立 WebSocket 連接
+let serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
+serverConnection.onopen = () => console.log('Connected to the signaling server');
+serverConnection.onmessage = gotMessageFromServer;
+
+const remoteVideo = document.getElementById('remoteVideo');
+const localVideo = document.getElementById('localVideo');
+const usernameInput = document.getElementById('usernameInput');
+const showUsername = document.getElementById('showLocalUserName');
+const showRemoteUsername = document.getElementById('showRemoteUserName');
+const showAllUsers = document.getElementById('allUsers');
+const callToUsernameInput = document.getElementById('callToUsernameInput');
+const callOngoing = document.getElementById('callOngoing');
+const callInitiator = document.getElementById('callInitiator');
+const callReceiver = document.getElementById('callReceiver');
+
+/**
+ * 當用戶點擊登入按鈕時執行
+ * @param {HTMLInputElement} self
+ */
+function loginClick(self) {
+	localUser = usernameInput.value;
+	if (/Mobi|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent)) {
+		self.outerHTML = `<button class="primary" onclick="share('m')">Share Media</button>
+                          <button class="primary" onclick="share('')">Share Client</button>`;
+	} else {
+		self.outerHTML = `<button class="primary" onclick="share('m')">Share Media</button>
+                          <button class="primary" onclick="share('s')">Share Screen</button>
+                          <button class="primary" onclick="share('')">Share Client</button>`;
+	}
+}
+
+/**
+ * 撥打電話按鈕的處理函數
+ */
+function callBtnClick() {
+	const callToUsername = callToUsernameInput.value;
+
+	if (callToUsername.length > 0) {
+		connectedUser = callToUsername;
+		yourConn.createOffer()
+			.then((offer) => {
+				yourConn.setLocalDescription(offer).then(() => {
+					send({ type: 'offer', name: connectedUser, offer });
+				});
+				callOngoing.style.display = 'block';
+				callInitiator.style.display = 'none';
+			})
+			.catch((error) => {
+				alert('Error when creating an offer', error);
+				console.error('Error when creating an offer', error);
+			});
+	} else alert("Username can't be blank!");
+}
+
+function hangUpClick() {
+	send({ type: 'hangup', name: localUser });
+	handelHangUp();
+}
+
+window.addEventListener('beforeunload', () => {
+	serverConnection.close();
+});
+
+/**
+ * 處理從伺服器接收到的訊息
+ */
+function gotMessageFromServer(message) {
+	const data = JSON.parse(message.data);
+	switch (data.type) {
+		case 'login': handleLogin(data.success, data.allUsers, data.share); break;
+		case 'offer': handleOffer(data.offer, data.name); break;
+		case 'answer': handleAnswer(data.answer); break;
+		case 'decline': handleDecline(data.message); break;
+		case 'candidate': handleCandidate(data.candidate); break;
+		case 'leave': handleLeave(); break;
+		case 'hangup': handelHangUp(); break;
+		case 'users': refreshUserList(data.users); break;
+		default: break;
+	}
+	serverConnection.onerror = errorHandler;
+}
+
+function getUserMediaSuccess(stream) {
+	localStream = stream;
+	localVideo.srcObject = stream;
+	yourConn = new RTCPeerConnection(peerConnectionConfig);
+	setupConnection(stream);
+}
+
+function setupConnection(stream) {
+	yourConn.onicecandidate = (event) => {
+		if (event.candidate) {
+			send({ type: 'candidate', name: connectedUser, candidate: event.candidate });
+		}
+	};
+
+	yourConn.ontrack = (event) => {
+		remoteVideo.srcObject = event.streams[0];
+		remoteVideo.hidden = false;
+		showRemoteUsername.innerHTML = connectedUser;
+	};
+
+	if (stream) {
+		stream.getTracks().forEach((track) => yourConn.addTrack(track, stream));
+	}
+}
+
+function errorHandler(error) {
+	console.error(error);
+}
+
+function send(msg) {
+	serverConnection.send(JSON.stringify(msg));
+}
+
+function share(mediaType) {
+	localUser = usernameInput.value;
+	showUsername.innerHTML = localUser;
+
+	if (localUser.length > 0) {
+		send({ type: 'login', name: localUser, share: mediaType });
+
+		if (mediaType === 'm') {
+			navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+				.then(getUserMediaSuccess)
+				.catch(errorHandler);
+		} else if (mediaType === 's') {
+			navigator.mediaDevices.getDisplayMedia()
+				.then(getUserMediaSuccess)
+				.catch(errorHandler);
+		} else if (mediaType === '') {
+			yourConn = new RTCPeerConnection(peerConnectionConfig);
+			setupConnection(null);
+		}
+	}
+}
+
+function handleLogin(success, allUsers, share) {
+	if (!success) {
+		alert('Oops...try a different username');
+		return;
+	}
+	refreshUserList(allUsers);
+	document.getElementById('myName').hidden = true;
+	document.getElementById('otherElements').hidden = false;
+}
+
+function handleOffer(offer, name) {
+	connectedUser = name;
+	yourConn.setRemoteDescription(new RTCSessionDescription(offer))
+		.then(() => {
+			while (candidateQueue.length) {
+				yourConn.addIceCandidate(new RTCIceCandidate(candidateQueue.shift())).catch(errorHandler);
+			}
+		})
+		.then(() => yourConn.createAnswer())
+		.then((answer) => yourConn.setLocalDescription(answer))
+		.then(() => send({ type: 'answer', name: connectedUser, answer: yourConn.localDescription }))
+		.catch(errorHandler);
+}
+
+function handleAnswer(answer) {
+	yourConn.setRemoteDescription(new RTCSessionDescription(answer))
+		.then(() => {
+			while (candidateQueue.length) {
+				yourConn.addIceCandidate(new RTCIceCandidate(candidateQueue.shift())).catch(errorHandler);
+			}
+		})
+		.catch(errorHandler);
+}
+
+function handleCandidate(candidate) {
+	if (yourConn.remoteDescription) {
+		yourConn.addIceCandidate(new RTCIceCandidate(candidate)).catch(errorHandler);
+	} else {
+		candidateQueue.push(candidate);
+	}
+}
+
+function handleLeave() {
+	handelHangUp();
+}
+
+function handelHangUp() {
+	connectedUser = null;
+	remoteVideo.srcObject = null;
+	remoteVideo.hidden = true;
+	showRemoteUsername.innerHTML = '';
+	callOngoing.style.display = 'none';
+	callInitiator.style.display = 'block';
+	yourConn.close();
+	yourConn = new RTCPeerConnection(peerConnectionConfig);
+	setupConnection(localStream);
+}
+
+function refreshUserList(users) {
+	showAllUsers.innerHTML = 'Available users: ' + users.join(', ');
+}
